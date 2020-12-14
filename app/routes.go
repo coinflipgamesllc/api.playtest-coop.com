@@ -17,6 +17,14 @@ func (s *Server) routes() {
 			auth.POST("/token", s.handleRefreshToken())
 			auth.GET("/verify-email/:id", s.handleVerifyEmail())
 		}
+
+		games := v1.Group("/games")
+		{
+			games.GET("", s.handleListGames())
+			games.POST("", s.authenticated, s.handleCreateGame())
+			games.GET("/:id", s.handleGetGame())
+			games.PUT("/:id", s.authenticated, s.handleUpdateGame())
+		}
 	}
 }
 

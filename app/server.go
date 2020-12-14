@@ -15,19 +15,19 @@ import (
 )
 
 type Server struct {
-	authToken      string
-	hostname       string
-	mail           mailgun.Mailgun
-	mailValidator  mailgun.EmailValidator
-	router         *gin.Engine
-	templates      map[string]*template.Template
+	authToken     string
+	hostname      string
+	mail          mailgun.Mailgun
+	mailValidator mailgun.EmailValidator
+	router        *gin.Engine
+	templates     map[string]*template.Template
+
+	gameRepository domain.GameRepository
 	userRepository domain.UserRepository
 }
 
 func NewServer() *Server {
 	db := db()
-
-	// Start domain events handlers
 
 	// Create our server
 	server := &Server{
@@ -36,6 +36,7 @@ func NewServer() *Server {
 		mail:           mail(),
 		router:         gin.Default(),
 		templates:      templates(),
+		gameRepository: &persistence.GameRepository{DB: db},
 		userRepository: &persistence.UserRepository{DB: db},
 	}
 

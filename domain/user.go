@@ -17,7 +17,7 @@ type User struct {
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
 	Name     string       `json:"name"`
-	Account  user.Account `gorm:"embedded"`
+	Account  user.Account `json:"-" gorm:"embedded"`
 	Pronouns string       `json:"pronouns"`
 }
 

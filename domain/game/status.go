@@ -1,5 +1,9 @@
 package game
 
+import (
+	"fmt"
+)
+
 // Status tracks where a game is in the lifecycle
 type Status string
 
@@ -16,3 +20,19 @@ const (
 	// Archived games are any that are no longer publicly visible
 	Archived = "Archived"
 )
+
+// StatusFromString returns the Status type corresponding to the provided string
+func StatusFromString(s string) (Status, error) {
+	switch s {
+	case "Prototype":
+		return Prototype, nil
+	case "Signed":
+		return Signed, nil
+	case "Published":
+		return Published, nil
+	case "Archived":
+		return Archived, nil
+	default:
+		return "", fmt.Errorf("invalid status '%s'", s)
+	}
+}
