@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        @import url("https://fonts.googleapis.com/css?family=Eczar");
+
+        body {
+            background: #121212;
+            text-align: center;
+            color: #dadada;
+            text-shadow: 2px 2px 3px rgba(255, 174, 1, 0.5);
+        }
+        h1 {
+            font-family: "Eczar", cursive;
+            font-size: 120px;
+            letter-spacing: 15px;
+            margin: 10vh 0 0;
+        }
+        a {
+            padding: 10px 15px;
+            border: 1px solid #dadada;
+            border-radius: 32px;
+            color: #dadada;
+            text-decoration: none;
+        }
+        div {
+            margin-bottom: 30px;
+        }
+        pre {
+            padding: 20px;
+            margin: 0 20px;
+            border: 1px solid #dadada;
+            background-color: #333;
+        }
+    </style>
+</head>
+<body>
+<h1>SOMETHING WENT WRONG</h1>
+{{if .error}}
+<div>
+<p>This information might be useful:</p>
+<pre>{{.error}}</pre>
+</div>
+{{end}}
+<a href="https://playtest-coop.com">Go home</a>
+</body>
+</html>
