@@ -18,6 +18,14 @@ func (s *Server) routes() {
 			auth.GET("/verify-email/:id", s.handleVerifyEmail())
 		}
 
+		files := v1.Group("/files")
+		{
+			files.GET("/sign", s.authenticated, s.handlePresignUpload())
+			files.POST("", s.authenticated, s.handleCreateFile())
+			files.GET("", s.authenticated, s.handleListUserFiles())
+			files.DELETE("/:id", s.authenticated, s.handleDeleteFile())
+		}
+
 		games := v1.Group("/games")
 		{
 			games.GET("", s.handleListGames())

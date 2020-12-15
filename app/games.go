@@ -2,7 +2,6 @@ package app
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 
 	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
@@ -40,8 +39,6 @@ func (s *Server) handleListGames() gin.HandlerFunc {
 		if req.Limit == 0 {
 			req.Limit = 10
 		}
-
-		fmt.Printf("%+v\n", req)
 
 		// Fetch games
 		games, total, err := s.gameRepository.ListGames(
@@ -151,6 +148,11 @@ func (s *Server) handleGetGame() gin.HandlerFunc {
 			return
 		}
 
+		if game == nil {
+			c.AbortWithStatusJSON(404, serverError(errors.New("not found")))
+			return
+		}
+
 		c.JSON(200, response{Game: game})
 	}
 }
@@ -186,6 +188,11 @@ func (s *Server) handleUpdateGame() gin.HandlerFunc {
 		game, err := s.gameRepository.GameOfID(uint(id))
 		if err != nil {
 			c.AbortWithStatusJSON(500, serverError(err))
+			return
+		}
+
+		if game == nil {
+			c.AbortWithStatusJSON(404, serverError(errors.New("not found")))
 			return
 		}
 

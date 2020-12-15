@@ -17,8 +17,9 @@ type Game struct {
 	Title     string      `json:"title" gorm:"not null"`
 	Overview  string      `json:"overview"`
 	Status    game.Status `json:"status"`
-	Designers []User      `json:"designers" gorm:"many2many:game_designers;"`
 	Stats     game.Stats  `json:"stats" gorm:"embedded"`
+	Designers []User      `json:"designers" gorm:"many2many:game_designers;"`
+	Files     []File      `json:"files"`
 }
 
 // GameRepository defines how to interact with games in database
@@ -73,6 +74,7 @@ func (g *Game) UpdateOverview(newOverview string) {
 	}
 }
 
+// UpdateStatus will set the status of the game, provided the status exists
 func (g *Game) UpdateStatus(ns string) error {
 	newStatus, err := game.StatusFromString(ns)
 	if err != nil {
@@ -119,4 +121,23 @@ func (g *Game) UpdateStats(minPlayers, maxPlayers, minAge, estimatedPlaytime int
 		MinAge:            minAge,
 		EstimatedPlaytime: estimatedPlaytime,
 	}
+}
+
+// AddFile adds a file to this game
+func (g *Game) AddFile(newFile *File) {
+	if newFile == nil {
+		return
+	}
+
+	if g.Files == nil {
+		g.Files = []File{}
+	}
+
+	for _, f := range g.Files {
+		if f.ID == newFile.ID {
+			return
+		}
+	}
+
+	g.Files = append(g.Files, *newFile)
 }

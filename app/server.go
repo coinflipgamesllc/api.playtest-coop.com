@@ -9,19 +9,28 @@ import (
 	"github.com/coinflipgamesllc/api.playtest-coop.com/infrastructure/persistence"
 	"github.com/gin-gonic/gin"
 	"github.com/mailgun/mailgun-go/v4"
+	"github.com/minio/minio-go/v7"
+	"github.com/minio/minio-go/v7/pkg/credentials"
 	"github.com/spf13/viper"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
 type Server struct {
-	authToken     string
-	hostname      string
+	authToken string
+	hostname  string
+
 	mail          mailgun.Mailgun
 	mailValidator mailgun.EmailValidator
-	router        *gin.Engine
-	templates     map[string]*template.Template
 
+	router *gin.Engine
+
+	s3Bucket string
+	s3Client *minio.Client
+
+	templates map[string]*template.Template
+
+	fileRepository domain.FileRepository
 	gameRepository domain.GameRepository
 	userRepository domain.UserRepository
 }
@@ -35,7 +44,10 @@ func NewServer() *Server {
 		hostname:       viper.GetString("HOSTNAME"),
 		mail:           mail(),
 		router:         gin.Default(),
+		s3Bucket:       viper.GetString("S3_BUCKET"),
+		s3Client:       s3(),
 		templates:      templates(),
+		fileRepository: &persistence.FileRepository{DB: db},
 		gameRepository: &persistence.GameRepository{DB: db},
 		userRepository: &persistence.UserRepository{DB: db},
 	}
@@ -74,6 +86,7 @@ func db() *gorm.DB {
 	}
 
 	db.AutoMigrate(
+		&domain.File{},
 		&domain.Game{},
 		&domain.User{},
 	)
@@ -86,6 +99,19 @@ func mail() mailgun.Mailgun {
 		viper.GetString("MAILGUN_DOMAIN"),
 		viper.GetString("MAILGUN_APIKEY"),
 	)
+}
+
+func s3() *minio.Client {
+	s3, err := minio.New(viper.GetString("S3_ENDPOINT"), &minio.Options{
+		Creds:  credentials.NewStaticV4(viper.GetString("AWS_ACCESS_KEY"), viper.GetString("AWS_ACCESS_SECRET"), ""),
+		Secure: true,
+	})
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	return s3
 }
 
 func templates() map[string]*template.Template {
