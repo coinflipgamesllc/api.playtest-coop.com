@@ -1,6 +1,10 @@
 package main
 
-import "github.com/coinflipgamesllc/api.playtest-coop.com/app"
+import (
+	"github.com/coinflipgamesllc/api.playtest-coop.com/infrastructure"
+	"github.com/coinflipgamesllc/api.playtest-coop.com/ui"
+	"github.com/spf13/viper"
+)
 
 // @title Playtest Co-op API
 // @version 1.0
@@ -13,7 +17,9 @@ import "github.com/coinflipgamesllc/api.playtest-coop.com/app"
 // @host api.playtest-coop.com
 // @BasePath /v1
 func main() {
-	server := app.NewServer()
+	container := &infrastructure.Container{}
+	ui.RegisterRoutes(container)
 
-	server.Run()
+	router := container.Router()
+	router.Run(":" + viper.GetString("PORT"))
 }

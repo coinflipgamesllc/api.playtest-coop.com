@@ -11,14 +11,14 @@ import (
 
 // User represents a designer, tester, publisher, etc user of the system
 type User struct {
-	ID        uint           `json:"id" gorm:"primarykey"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
+	ID        uint           `json:"id" gorm:"primarykey" example:"123"`
+	CreatedAt time.Time      `json:"created_at" example:"2020-12-11T15:29:49.321629-08:00"`
+	UpdatedAt time.Time      `json:"updated_at" example:"2020-12-13T15:42:40.578904-08:00"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
-	Name     string       `json:"name"`
+	Name     string       `json:"name" example:"User McUserton"`
 	Account  user.Account `json:"-" gorm:"embedded"`
-	Pronouns string       `json:"pronouns"`
+	Pronouns string       `json:"pronouns" example:"they/them"`
 }
 
 // UserRepository defines how to interact with the user in database

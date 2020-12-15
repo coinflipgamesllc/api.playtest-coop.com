@@ -1,174 +1,163 @@
 package app
 
-import (
-	"context"
-	"errors"
-	"fmt"
-	"strconv"
-	"time"
+// func (s *Server) handlePresignUpload() gin.HandlerFunc {
+// 	type request struct {
+// 		Name      string `form:"name" binding:"required"`
+// 		Extension string `form:"extension" binding:"required"`
+// 	}
 
-	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
-	"github.com/gin-gonic/gin"
-)
+// 	type response struct {
+// 		URL string `json:"url"`
+// 	}
 
-func (s *Server) handlePresignUpload() gin.HandlerFunc {
-	type request struct {
-		Name      string `form:"name" binding:"required"`
-		Extension string `form:"extension" binding:"required"`
-	}
+// 	return func(c *gin.Context) {
+// 		// Validate request
+// 		var req request
+// 		if err := c.ShouldBind(&req); err != nil {
+// 			c.AbortWithStatusJSON(400, serverError(err))
+// 			return
+// 		}
 
-	type response struct {
-		URL string `json:"url"`
-	}
+// 		presignedURL, err := s.s3Client.PresignedPutObject(
+// 			context.Background(),
+// 			s.s3Bucket,
+// 			domain.GenerateObjectName(req.Name, req.Extension),
+// 			time.Duration(1000)*time.Minute,
+// 		)
 
-	return func(c *gin.Context) {
-		// Validate request
-		var req request
-		if err := c.ShouldBind(&req); err != nil {
-			c.AbortWithStatusJSON(400, serverError(err))
-			return
-		}
+// 		if err != nil {
+// 			c.AbortWithStatusJSON(500, serverError(err))
+// 			return
+// 		}
 
-		presignedURL, err := s.s3Client.PresignedPutObject(
-			context.Background(),
-			s.s3Bucket,
-			domain.GenerateObjectName(req.Name, req.Extension),
-			time.Duration(1000)*time.Minute,
-		)
+// 		c.JSON(200, response{URL: presignedURL.String()})
+// 	}
+// }
 
-		if err != nil {
-			c.AbortWithStatusJSON(500, serverError(err))
-			return
-		}
+// func (s *Server) handleCreateFile() gin.HandlerFunc {
+// 	type request struct {
+// 		Role     string `json:"role" binding:"required"`
+// 		Caption  string `json:"caption"`
+// 		Filename string `json:"filename" binding:"required"`
+// 		Object   string `json:"object" binding:"required"`
+// 		Size     int64  `json:"size" binding:"required"`
+// 		GameID   uint   `json:"game"`
+// 	}
 
-		c.JSON(200, response{URL: presignedURL.String()})
-	}
-}
+// 	type response struct {
+// 		Message string `json:"message"`
+// 	}
 
-func (s *Server) handleCreateFile() gin.HandlerFunc {
-	type request struct {
-		Role     string `json:"role" binding:"required"`
-		Caption  string `json:"caption"`
-		Filename string `json:"filename" binding:"required"`
-		Object   string `json:"object" binding:"required"`
-		Size     int64  `json:"size" binding:"required"`
-		GameID   uint   `json:"game"`
-	}
+// 	return func(c *gin.Context) {
+// 		// Validate the request
+// 		var req request
+// 		if err := c.ShouldBind(&req); err != nil {
+// 			c.AbortWithStatusJSON(400, serverError(err))
+// 			return
+// 		}
 
-	type response struct {
-		Message string `json:"message"`
-	}
+// 		currentUser := s.user(c)
 
-	return func(c *gin.Context) {
-		// Validate the request
-		var req request
-		if err := c.ShouldBind(&req); err != nil {
-			c.AbortWithStatusJSON(400, serverError(err))
-			return
-		}
+// 		// Create the file
+// 		var file *domain.File
+// 		var err error
+// 		switch req.Role {
+// 		case "Image":
+// 			file, err = domain.NewImage(*currentUser, req.Filename, s.s3Bucket, req.Object, req.Size)
+// 		case "SellSheet":
+// 			file, err = domain.NewSellSheet(*currentUser, req.Filename, s.s3Bucket, req.Object, req.Size)
+// 		case "PrintAndPlay":
+// 			file, err = domain.NewPrintAndPlay(*currentUser, req.Filename, s.s3Bucket, req.Object, req.Size)
+// 		default:
+// 			err = fmt.Errorf("invalid role '%s'", req.Role)
+// 		}
 
-		currentUser := s.user(c)
+// 		if err != nil {
+// 			c.AbortWithStatusJSON(400, serverError(err))
+// 			return
+// 		}
 
-		// Create the file
-		var file *domain.File
-		var err error
-		switch req.Role {
-		case "Image":
-			file, err = domain.NewImage(*currentUser, req.Filename, s.s3Bucket, req.Object, req.Size)
-		case "SellSheet":
-			file, err = domain.NewSellSheet(*currentUser, req.Filename, s.s3Bucket, req.Object, req.Size)
-		case "PrintAndPlay":
-			file, err = domain.NewPrintAndPlay(*currentUser, req.Filename, s.s3Bucket, req.Object, req.Size)
-		default:
-			err = fmt.Errorf("invalid role '%s'", req.Role)
-		}
+// 		// If we included a game, tie it to the game
+// 		if req.GameID != 0 {
+// 			// Make sure the user is allowed to edit this game
+// 			game, err := s.gameRepository.GameOfID(req.GameID)
+// 			if err != nil || game == nil {
+// 				c.AbortWithStatusJSON(400, serverError(errors.New("game invalid")))
+// 				return
+// 			}
 
-		if err != nil {
-			c.AbortWithStatusJSON(400, serverError(err))
-			return
-		}
+// 			if !game.MayBeUpdatedBy(currentUser) {
+// 				c.AbortWithStatusJSON(401, serverError(errors.New("you may not edit this game")))
+// 				return
+// 			}
 
-		// If we included a game, tie it to the game
-		if req.GameID != 0 {
-			// Make sure the user is allowed to edit this game
-			game, err := s.gameRepository.GameOfID(req.GameID)
-			if err != nil || game == nil {
-				c.AbortWithStatusJSON(400, serverError(errors.New("game invalid")))
-				return
-			}
+// 			file.BelongsTo(game)
+// 		}
 
-			if !game.MayBeUpdatedBy(currentUser) {
-				c.AbortWithStatusJSON(401, serverError(errors.New("you may not edit this game")))
-				return
-			}
+// 		// Save
+// 		err = s.fileRepository.Save(file)
+// 		if err != nil {
+// 			c.AbortWithStatusJSON(500, serverError(err))
+// 			return
+// 		}
+// 	}
+// }
 
-			file.BelongsTo(game)
-		}
+// func (s *Server) handleListUserFiles() gin.HandlerFunc {
+// 	type response struct {
+// 		Files []domain.File `json:"files"`
+// 	}
 
-		// Save
-		err = s.fileRepository.Save(file)
-		if err != nil {
-			c.AbortWithStatusJSON(500, serverError(err))
-			return
-		}
-	}
-}
+// 	return func(c *gin.Context) {
+// 		currentUser := s.user(c)
 
-func (s *Server) handleListUserFiles() gin.HandlerFunc {
-	type response struct {
-		Files []domain.File `json:"files"`
-	}
+// 		files, err := s.fileRepository.FilesOfUser(currentUser.ID)
+// 		if err != nil {
+// 			c.AbortWithStatusJSON(500, serverError(err))
+// 			return
+// 		}
 
-	return func(c *gin.Context) {
-		currentUser := s.user(c)
+// 		c.JSON(200, response{Files: files})
+// 	}
+// }
 
-		files, err := s.fileRepository.FilesOfUser(currentUser.ID)
-		if err != nil {
-			c.AbortWithStatusJSON(500, serverError(err))
-			return
-		}
+// func (s *Server) handleDeleteFile() gin.HandlerFunc {
+// 	type response struct {
+// 		Message string `json:"message"`
+// 	}
 
-		c.JSON(200, response{Files: files})
-	}
-}
+// 	return func(c *gin.Context) {
+// 		// Pull file by ID
+// 		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+// 		if err != nil {
+// 			c.AbortWithStatusJSON(500, serverError(err))
+// 			return
+// 		}
 
-func (s *Server) handleDeleteFile() gin.HandlerFunc {
-	type response struct {
-		Message string `json:"message"`
-	}
+// 		file, err := s.fileRepository.FileOfID(uint(id))
+// 		if err != nil {
+// 			c.AbortWithStatusJSON(500, serverError(err))
+// 			return
+// 		}
 
-	return func(c *gin.Context) {
-		// Pull file by ID
-		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-		if err != nil {
-			c.AbortWithStatusJSON(500, serverError(err))
-			return
-		}
+// 		if file == nil {
+// 			c.AbortWithStatusJSON(404, serverError(errors.New("not found")))
+// 			return
+// 		}
 
-		file, err := s.fileRepository.FileOfID(uint(id))
-		if err != nil {
-			c.AbortWithStatusJSON(500, serverError(err))
-			return
-		}
+// 		// Ensure that the current user is the uploader and deny delete if not
+// 		currentUser := s.user(c)
+// 		if file.UploadedByID != currentUser.ID {
+// 			c.AbortWithStatusJSON(401, serverError(errors.New("unauthorized")))
+// 			return
+// 		}
 
-		if file == nil {
-			c.AbortWithStatusJSON(404, serverError(errors.New("not found")))
-			return
-		}
+// 		// And delete
+// 		if err := s.fileRepository.Delete(file); err != nil {
+// 			c.AbortWithStatusJSON(500, serverError(err))
+// 			return
+// 		}
 
-		// Ensure that the current user is the uploader and deny delete if not
-		currentUser := s.user(c)
-		if file.UploadedByID != currentUser.ID {
-			c.AbortWithStatusJSON(401, serverError(errors.New("unauthorized")))
-			return
-		}
-
-		// And delete
-		if err := s.fileRepository.Delete(file); err != nil {
-			c.AbortWithStatusJSON(500, serverError(err))
-			return
-		}
-
-		c.JSON(200, response{Message: "ok"})
-	}
-}
+// 		c.JSON(200, response{Message: "ok"})
+// 	}
+// }

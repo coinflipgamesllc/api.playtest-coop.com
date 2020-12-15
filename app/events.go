@@ -1,47 +1,40 @@
 package app
 
-import (
-	"fmt"
-	"log"
+// func (s *Server) listenForEvents() {
+// 	userCreated := make(chan pubsub.Message)
+// 	pubsub.Instance.Subscribe("User/Created", userCreated)
 
-	"github.com/coinflipgamesllc/api.playtest-coop.com/infrastructure/pubsub"
-)
+// 	userEmailUnverified := make(chan pubsub.Message)
+// 	pubsub.Instance.Subscribe("User/EmailUnverified", userEmailUnverified)
 
-func (s *Server) listenForEvents() {
-	userCreated := make(chan pubsub.Message)
-	pubsub.Instance.Subscribe("User/Created", userCreated)
+// 	for {
+// 		select {
+// 		case evt := <-userCreated:
+// 			go s.userCreated(evt)
+// 		case evt := <-userEmailUnverified:
+// 			go s.userEmailUnverified(evt)
+// 		}
+// 	}
+// }
 
-	userEmailUnverified := make(chan pubsub.Message)
-	pubsub.Instance.Subscribe("User/EmailUnverified", userEmailUnverified)
+// func (s *Server) userCreated(msg pubsub.Message) {
+// 	log.Printf("[User/Created]: %+v\n\n", msg)
 
-	for {
-		select {
-		case evt := <-userCreated:
-			go s.userCreated(evt)
-		case evt := <-userEmailUnverified:
-			go s.userEmailUnverified(evt)
-		}
-	}
-}
+// 	data := msg.Data.(map[string]interface{})
 
-func (s *Server) userCreated(msg pubsub.Message) {
-	log.Printf("[User/Created]: %+v\n\n", msg)
+// 	err := s.welcomeEmail(data["email"].(string), data["name"].(string), data["verificationID"].(string))
+// 	if err != nil {
+// 		fmt.Printf("%+v\n", err)
+// 	}
+// }
 
-	data := msg.Data.(map[string]interface{})
+// func (s *Server) userEmailUnverified(msg pubsub.Message) {
+// 	log.Printf("[User/EmailUnverified]: %+v\n\n", msg)
 
-	err := s.welcomeEmail(data["email"].(string), data["name"].(string), data["verificationID"].(string))
-	if err != nil {
-		fmt.Printf("%+v\n", err)
-	}
-}
+// 	data := msg.Data.(map[string]interface{})
 
-func (s *Server) userEmailUnverified(msg pubsub.Message) {
-	log.Printf("[User/EmailUnverified]: %+v\n\n", msg)
-
-	data := msg.Data.(map[string]interface{})
-
-	err := s.verifyEmail(data["email"].(string), data["name"].(string), data["verificationID"].(string))
-	if err != nil {
-		fmt.Printf("%+v\n", err)
-	}
-}
+// 	err := s.verifyEmail(data["email"].(string), data["name"].(string), data["verificationID"].(string))
+// 	if err != nil {
+// 		fmt.Printf("%+v\n", err)
+// 	}
+// }

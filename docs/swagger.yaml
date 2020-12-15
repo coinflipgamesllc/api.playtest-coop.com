@@ -1,0 +1,251 @@
+basePath: /v1
+definitions:
+  controller.GetUserResponse:
+    properties:
+      user:
+        $ref: '#/definitions/domain.User'
+    type: object
+  controller.LoginRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      password:
+        example: AVerySecurePassword123!
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  controller.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgxNDA1MTcsInN1YiI6MX0.D5kR_AxkqIN6xCxvP07ZUIfYxbfdTrXAe7J03nGvkPw
+        type: string
+    required:
+    - refresh_token
+    type: object
+  controller.RequestErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  controller.ServerErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  controller.SignupRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      name:
+        example: User McUserton
+        type: string
+      password:
+        example: AVerySecurePassword123!
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+  controller.TokenResponse:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgwNTY5NzksIm5hbWUiOiJSb2IgTmV3dG9uIiwic3ViIjoxfQ.KKUtLne51DqBPqQxZZmCFsjsGAeYRukZNcXCx6IpLN8
+        type: string
+      refresh_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgxNDA1MTcsInN1YiI6MX0.D5kR_AxkqIN6xCxvP07ZUIfYxbfdTrXAe7J03nGvkPw
+        type: string
+    type: object
+  controller.UnauthorizedResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  controller.UpdateUserRequest:
+    properties:
+      email:
+        example: user@example.com
+        type: string
+      name:
+        example: User McUserton
+        type: string
+      new_password:
+        example: AVerySecurePassword123!
+        type: string
+      old_password:
+        example: NotASecurePassword
+        type: string
+      pronouns:
+        example: they/them
+        type: string
+    type: object
+  controller.UserTokenResponse:
+    properties:
+      access_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgwNTY5NzksIm5hbWUiOiJSb2IgTmV3dG9uIiwic3ViIjoxfQ.KKUtLne51DqBPqQxZZmCFsjsGAeYRukZNcXCx6IpLN8
+        type: string
+      refresh_token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgxNDA1MTcsInN1YiI6MX0.D5kR_AxkqIN6xCxvP07ZUIfYxbfdTrXAe7J03nGvkPw
+        type: string
+      user:
+        $ref: '#/definitions/domain.User'
+    type: object
+  domain.User:
+    properties:
+      created_at:
+        example: "2020-12-11T15:29:49.321629-08:00"
+        type: string
+      id:
+        example: 123
+        type: integer
+      name:
+        example: User McUserton
+        type: string
+      pronouns:
+        example: they/them
+        type: string
+      updated_at:
+        example: "2020-12-13T15:42:40.578904-08:00"
+        type: string
+    type: object
+host: api.playtest-coop.com
+info:
+  contact:
+    email: hi@coinflipgames.co
+    name: Coin Flip Games
+  description: This is the backend for all Playtest Co-op related data
+  termsOfService: https://playtest-coop.com/terms-of-service
+  title: Playtest Co-op API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User email/password combo
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/controller.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.UserTokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.RequestErrorResponse'
+      summary: Authenticate a user
+      tags:
+      - auth
+  /auth/signup:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: User name, email, and password
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/controller.SignupRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/controller.UserTokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.RequestErrorResponse'
+      summary: Create and authenticates a new user
+      tags:
+      - auth
+  /auth/token:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Refresh token originally acquired from /auth/token, /auth/signup,
+          or /auth/login
+        in: body
+        name: refresh_token
+        required: true
+        schema:
+          $ref: '#/definitions/controller.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.RequestErrorResponse'
+      summary: Regenerate the access token and refresh token, given a valid refresh
+        token.
+      tags:
+      - auth
+  /auth/user:
+    get:
+      description: The authentication token includes the user's ID as the subject.
+        We extract that and use it to pull the user from the database.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.GetUserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ServerErrorResponse'
+      summary: Retrieve the authenticated user
+      tags:
+      - auth
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: User data to update
+        in: body
+        name: params
+        schema:
+          $ref: '#/definitions/controller.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.GetUserResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/controller.UnauthorizedResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ServerErrorResponse'
+      summary: Update authenticated user
+      tags:
+      - auth
+swagger: "2.0"
