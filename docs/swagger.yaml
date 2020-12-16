@@ -1,9 +1,47 @@
 basePath: /v1
 definitions:
+  controller.AckResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  controller.CreateFileRequest:
+    properties:
+      caption:
+        example: What a cool image of a game!
+        type: string
+      filename:
+        example: example-image.png
+        type: string
+      game:
+        example: 123
+        type: integer
+      object:
+        example: asd9fhgaoseucgewio.png
+        type: string
+      role:
+        example: Image
+        type: string
+      size:
+        example: 1241231
+        type: integer
+    required:
+    - filename
+    - object
+    - role
+    - size
+    type: object
   controller.GetUserResponse:
     properties:
       user:
         $ref: '#/definitions/domain.User'
+    type: object
+  controller.ListUserFilesResponse:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/domain.File'
+        type: array
     type: object
   controller.LoginRequest:
     properties:
@@ -16,6 +54,24 @@ definitions:
     required:
     - email
     - password
+    type: object
+  controller.PresignUploadRequest:
+    properties:
+      extension:
+        example: jpg
+        type: string
+      name:
+        example: my-awesome-file.jpg
+        type: string
+    required:
+    - extension
+    - name
+    type: object
+  controller.PresignUploadResponse:
+    properties:
+      url:
+        example: https://assets.playtest-coop.com/...
+        type: string
     type: object
   controller.RefreshTokenRequest:
     properties:
@@ -93,6 +149,30 @@ definitions:
         type: string
       user:
         $ref: '#/definitions/domain.User'
+    type: object
+  domain.File:
+    properties:
+      caption:
+        example: What a cool image of a game!
+        type: string
+      created_at:
+        example: "2020-12-11T15:29:49.321629-08:00"
+        type: string
+      filename:
+        example: example-image.png
+        type: string
+      id:
+        example: 123
+        type: integer
+      role:
+        example: Image
+        type: string
+      updated_at:
+        example: "2020-12-13T15:42:40.578904-08:00"
+        type: string
+      url:
+        example: https://assets.playtest-coop.com/asd9fhgaoseucgewio.png
+        type: string
     type: object
   domain.User:
     properties:
@@ -248,4 +328,103 @@ paths:
       summary: Update authenticated user
       tags:
       - auth
+  /files:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.ListUserFilesResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ServerErrorResponse'
+      summary: List files belonging to the authenticated user
+      tags:
+      - files
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: File data
+        in: body
+        name: file
+        required: true
+        schema:
+          $ref: '#/definitions/controller.CreateFileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.AckResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.RequestErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ServerErrorResponse'
+      summary: Save a record of a file stored in S3
+      tags:
+      - files
+  /files/:id:
+    delete:
+      parameters:
+      - description: File ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.AckResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.RequestErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ServerErrorResponse'
+      summary: remove a file by ID
+      tags:
+      - files
+  /files/sign:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - description: File data
+        in: body
+        name: file
+        required: true
+        schema:
+          $ref: '#/definitions/controller.PresignUploadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.PresignUploadResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.RequestErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ServerErrorResponse'
+      summary: Generate a presigned URL for the client to upload directly to S3
+      tags:
+      - files
 swagger: "2.0"

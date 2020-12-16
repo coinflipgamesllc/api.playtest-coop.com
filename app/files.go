@@ -1,163 +1,128 @@
 package app
 
-// func (s *Server) handlePresignUpload() gin.HandlerFunc {
-// 	type request struct {
-// 		Name      string `form:"name" binding:"required"`
-// 		Extension string `form:"extension" binding:"required"`
-// 	}
+import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
 
-// 	type response struct {
-// 		URL string `json:"url"`
-// 	}
+	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
+	"github.com/minio/minio-go/v7"
+	"go.uber.org/zap"
+)
 
-// 	return func(c *gin.Context) {
-// 		// Validate request
-// 		var req request
-// 		if err := c.ShouldBind(&req); err != nil {
-// 			c.AbortWithStatusJSON(400, serverError(err))
-// 			return
-// 		}
+// FileService handles file uploads/downloads and indirect interaction with S3
+type FileService struct {
+	FileRepository domain.FileRepository
+	GameRepository domain.GameRepository
+	UserRepository domain.UserRepository
+	Logger         *zap.SugaredLogger
+	S3Bucket       string
+	S3Client       *minio.Client
+}
 
-// 		presignedURL, err := s.s3Client.PresignedPutObject(
-// 			context.Background(),
-// 			s.s3Bucket,
-// 			domain.GenerateObjectName(req.Name, req.Extension),
-// 			time.Duration(1000)*time.Minute,
-// 		)
+// PresignUpload generates a presigned URL for uploading a file
+func (s *FileService) PresignUpload(name, extension string) (string, error) {
+	presignedURL, err := s.S3Client.PresignedPutObject(
+		context.Background(),
+		s.S3Bucket,
+		domain.GenerateObjectName(name, extension),
+		time.Duration(1000)*time.Minute,
+	)
 
-// 		if err != nil {
-// 			c.AbortWithStatusJSON(500, serverError(err))
-// 			return
-// 		}
+	if err != nil {
+		return "", err
+	}
 
-// 		c.JSON(200, response{URL: presignedURL.String()})
-// 	}
-// }
+	return presignedURL.String(), nil
+}
 
-// func (s *Server) handleCreateFile() gin.HandlerFunc {
-// 	type request struct {
-// 		Role     string `json:"role" binding:"required"`
-// 		Caption  string `json:"caption"`
-// 		Filename string `json:"filename" binding:"required"`
-// 		Object   string `json:"object" binding:"required"`
-// 		Size     int64  `json:"size" binding:"required"`
-// 		GameID   uint   `json:"game"`
-// 	}
+// CreateFile stores a file in the database, optionally tied to a game
+func (s *FileService) CreateFile(userID uint, role, filename, object string, size int64, caption string, gameID uint) (*domain.File, error) {
+	user, err := s.UserRepository.UserOfID(userID)
+	if err != nil {
+		s.Logger.Error(err)
+		return nil, err
+	}
 
-// 	type response struct {
-// 		Message string `json:"message"`
-// 	}
+	// Create the file
+	var file *domain.File
+	switch role {
+	case "Image":
+		file, err = domain.NewImage(*user, filename, s.S3Bucket, object, size)
+	case "SellSheet":
+		file, err = domain.NewSellSheet(*user, filename, s.S3Bucket, object, size)
+	case "PrintAndPlay":
+		file, err = domain.NewPrintAndPlay(*user, filename, s.S3Bucket, object, size)
+	default:
+		err = fmt.Errorf("invalid role '%s'", role)
+	}
 
-// 	return func(c *gin.Context) {
-// 		// Validate the request
-// 		var req request
-// 		if err := c.ShouldBind(&req); err != nil {
-// 			c.AbortWithStatusJSON(400, serverError(err))
-// 			return
-// 		}
+	if err != nil {
+		s.Logger.Error(err)
+		return nil, err
+	}
 
-// 		currentUser := s.user(c)
+	// If we included a game, tie it to the game
+	if gameID != 0 {
+		// Make sure the user is allowed to edit this game
+		game, err := s.GameRepository.GameOfID(gameID)
+		if err != nil || game == nil {
+			s.Logger.Error(err)
+			return nil, err
+		}
 
-// 		// Create the file
-// 		var file *domain.File
-// 		var err error
-// 		switch req.Role {
-// 		case "Image":
-// 			file, err = domain.NewImage(*currentUser, req.Filename, s.s3Bucket, req.Object, req.Size)
-// 		case "SellSheet":
-// 			file, err = domain.NewSellSheet(*currentUser, req.Filename, s.s3Bucket, req.Object, req.Size)
-// 		case "PrintAndPlay":
-// 			file, err = domain.NewPrintAndPlay(*currentUser, req.Filename, s.s3Bucket, req.Object, req.Size)
-// 		default:
-// 			err = fmt.Errorf("invalid role '%s'", req.Role)
-// 		}
+		if !game.MayBeUpdatedBy(user) {
+			s.Logger.Error(err)
+			return nil, err
+		}
 
-// 		if err != nil {
-// 			c.AbortWithStatusJSON(400, serverError(err))
-// 			return
-// 		}
+		file.BelongsTo(game)
+	}
 
-// 		// If we included a game, tie it to the game
-// 		if req.GameID != 0 {
-// 			// Make sure the user is allowed to edit this game
-// 			game, err := s.gameRepository.GameOfID(req.GameID)
-// 			if err != nil || game == nil {
-// 				c.AbortWithStatusJSON(400, serverError(errors.New("game invalid")))
-// 				return
-// 			}
+	// Save
+	err = s.FileRepository.Save(file)
+	if err != nil {
+		s.Logger.Error(err)
+		return nil, err
+	}
 
-// 			if !game.MayBeUpdatedBy(currentUser) {
-// 				c.AbortWithStatusJSON(401, serverError(errors.New("you may not edit this game")))
-// 				return
-// 			}
+	return file, nil
+}
 
-// 			file.BelongsTo(game)
-// 		}
+// ListUserFiles fetches all files belonging to the specified user
+func (s *FileService) ListUserFiles(userID uint) ([]domain.File, error) {
+	files, err := s.FileRepository.FilesOfUser(userID)
+	if err != nil {
+		s.Logger.Error(err)
+		return nil, err
+	}
 
-// 		// Save
-// 		err = s.fileRepository.Save(file)
-// 		if err != nil {
-// 			c.AbortWithStatusJSON(500, serverError(err))
-// 			return
-// 		}
-// 	}
-// }
+	return files, nil
+}
 
-// func (s *Server) handleListUserFiles() gin.HandlerFunc {
-// 	type response struct {
-// 		Files []domain.File `json:"files"`
-// 	}
+// DeleteFile will remove the specified file, if the user is allowed
+func (s *FileService) DeleteFile(fileID, userID uint) error {
+	file, err := s.FileRepository.FileOfID(fileID)
+	if err != nil {
+		s.Logger.Error(err)
+		return err
+	}
 
-// 	return func(c *gin.Context) {
-// 		currentUser := s.user(c)
+	if file == nil {
+		return errors.New("file not found")
+	}
 
-// 		files, err := s.fileRepository.FilesOfUser(currentUser.ID)
-// 		if err != nil {
-// 			c.AbortWithStatusJSON(500, serverError(err))
-// 			return
-// 		}
+	// Ensure that the current user is the uploader and deny delete if not
+	if file.UploadedByID != userID {
+		return errors.New("unauthorized")
+	}
 
-// 		c.JSON(200, response{Files: files})
-// 	}
-// }
+	// And delete
+	if err := s.FileRepository.Delete(file); err != nil {
+		s.Logger.Error(err)
+		return err
+	}
 
-// func (s *Server) handleDeleteFile() gin.HandlerFunc {
-// 	type response struct {
-// 		Message string `json:"message"`
-// 	}
-
-// 	return func(c *gin.Context) {
-// 		// Pull file by ID
-// 		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-// 		if err != nil {
-// 			c.AbortWithStatusJSON(500, serverError(err))
-// 			return
-// 		}
-
-// 		file, err := s.fileRepository.FileOfID(uint(id))
-// 		if err != nil {
-// 			c.AbortWithStatusJSON(500, serverError(err))
-// 			return
-// 		}
-
-// 		if file == nil {
-// 			c.AbortWithStatusJSON(404, serverError(errors.New("not found")))
-// 			return
-// 		}
-
-// 		// Ensure that the current user is the uploader and deny delete if not
-// 		currentUser := s.user(c)
-// 		if file.UploadedByID != currentUser.ID {
-// 			c.AbortWithStatusJSON(401, serverError(errors.New("unauthorized")))
-// 			return
-// 		}
-
-// 		// And delete
-// 		if err := s.fileRepository.Delete(file); err != nil {
-// 			c.AbortWithStatusJSON(500, serverError(err))
-// 			return
-// 		}
-
-// 		c.JSON(200, response{Message: "ok"})
-// 	}
-// }
+	return nil
+}

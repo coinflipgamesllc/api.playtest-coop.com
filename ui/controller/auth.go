@@ -26,7 +26,7 @@ type GetUserResponse struct {
 // @Tags auth
 // @Router /auth/user [get]
 func (t *AuthController) GetUser(c *gin.Context) {
-	userID := t.userID(c)
+	userID := userID(c)
 
 	// Fetch the user
 	user, err := t.AuthService.FetchUser(userID)
@@ -63,7 +63,7 @@ type UpdateUserRequest struct {
 // @Tags auth
 // @Router /auth/user [put]
 func (t *AuthController) UpdateUser(c *gin.Context) {
-	userID := t.userID(c)
+	userID := userID(c)
 
 	// Validate request
 	var req UpdateUserRequest
@@ -210,16 +210,4 @@ func (t *AuthController) VerifyEmail(c *gin.Context) {
 
 	// Send em home
 	c.Redirect(307, "https://playtest-coop.com")
-}
-
-// userID helper function to extract the user's ID from the request context
-func (t *AuthController) userID(c *gin.Context) uint {
-	// Retrieve the user ID from the context
-	id, ok := c.Get("user_id")
-	if !ok {
-		unauthorizedResponse(c)
-		return 0
-	}
-
-	return uint(id.(float64))
 }

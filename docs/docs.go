@@ -218,14 +218,221 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/files": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "summary": "List files belonging to the authenticated user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ListUserFilesResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "summary": "Save a record of a file stored in S3",
+                "parameters": [
+                    {
+                        "description": "File data",
+                        "name": "file",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.CreateFileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.AckResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/controller.RequestErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/files/:id": {
+            "delete": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "summary": "remove a file by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "File ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.AckResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/controller.RequestErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/files/sign": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "summary": "Generate a presigned URL for the client to upload directly to S3",
+                "parameters": [
+                    {
+                        "description": "File data",
+                        "name": "file",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.PresignUploadRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.PresignUploadResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/controller.RequestErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ServerErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "controller.AckResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.CreateFileRequest": {
+            "type": "object",
+            "required": [
+                "filename",
+                "object",
+                "role",
+                "size"
+            ],
+            "properties": {
+                "caption": {
+                    "type": "string",
+                    "example": "What a cool image of a game!"
+                },
+                "filename": {
+                    "type": "string",
+                    "example": "example-image.png"
+                },
+                "game": {
+                    "type": "integer",
+                    "example": 123
+                },
+                "object": {
+                    "type": "string",
+                    "example": "asd9fhgaoseucgewio.png"
+                },
+                "role": {
+                    "type": "string",
+                    "example": "Image"
+                },
+                "size": {
+                    "type": "integer",
+                    "example": 1241231
+                }
+            }
+        },
         "controller.GetUserResponse": {
             "type": "object",
             "properties": {
                 "user": {
                     "$ref": "#/definitions/domain.User"
+                }
+            }
+        },
+        "controller.ListUserFilesResponse": {
+            "type": "object",
+            "properties": {
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.File"
+                    }
                 }
             }
         },
@@ -243,6 +450,32 @@ var doc = `{
                 "password": {
                     "type": "string",
                     "example": "AVerySecurePassword123!"
+                }
+            }
+        },
+        "controller.PresignUploadRequest": {
+            "type": "object",
+            "required": [
+                "extension",
+                "name"
+            ],
+            "properties": {
+                "extension": {
+                    "type": "string",
+                    "example": "jpg"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "my-awesome-file.jpg"
+                }
+            }
+        },
+        "controller.PresignUploadResponse": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "example": "https://assets.playtest-coop.com/..."
                 }
             }
         },
@@ -355,6 +588,39 @@ var doc = `{
                 },
                 "user": {
                     "$ref": "#/definitions/domain.User"
+                }
+            }
+        },
+        "domain.File": {
+            "type": "object",
+            "properties": {
+                "caption": {
+                    "type": "string",
+                    "example": "What a cool image of a game!"
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2020-12-11T15:29:49.321629-08:00"
+                },
+                "filename": {
+                    "type": "string",
+                    "example": "example-image.png"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 123
+                },
+                "role": {
+                    "type": "string",
+                    "example": "Image"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2020-12-13T15:42:40.578904-08:00"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "https://assets.playtest-coop.com/asd9fhgaoseucgewio.png"
                 }
             }
         },

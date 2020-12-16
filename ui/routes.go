@@ -27,13 +27,14 @@ func RegisterRoutes(container *infrastructure.Container) {
 			auth.GET("/verify-email/:id", authController.VerifyEmail)
 		}
 
-		// files := v1.Group("/files")
-		// {
-		// 	files.GET("/sign", container.Authenticated(), s.handlePresignUpload())
-		// 	files.POST("", container.Authenticated(), s.handleCreateFile())
-		// 	files.GET("", container.Authenticated(), s.handleListUserFiles())
-		// 	files.DELETE("/:id", container.Authenticated(), s.handleDeleteFile())
-		// }
+		fileController := container.FileController()
+		files := v1.Group("/files")
+		{
+			files.GET("/sign", container.Authenticated(), fileController.PresignUpload)
+			files.POST("", container.Authenticated(), fileController.CreateFile)
+			files.GET("", container.Authenticated(), fileController.ListUserFiles)
+			files.DELETE("/:id", container.Authenticated(), fileController.DeleteFile)
+		}
 
 		// games := v1.Group("/games")
 		// {

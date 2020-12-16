@@ -2,6 +2,15 @@ package controller
 
 import "github.com/gin-gonic/gin"
 
+// AckResponse simply acknowledges the request
+type AckResponse struct {
+	Message string `json:"message"`
+}
+
+func ackResponse(c *gin.Context) {
+	c.JSON(200, AckResponse{Message: "ok"})
+}
+
 // NotFoundResponse to be paired with a 404
 type NotFoundResponse struct {
 	Error string `json:"error"`
@@ -36,4 +45,16 @@ type UnauthorizedResponse struct {
 
 func unauthorizedResponse(c *gin.Context) {
 	c.AbortWithStatusJSON(401, UnauthorizedResponse{Error: "unauthorized"})
+}
+
+// userID helper function to extract the user's ID from the request context
+func userID(c *gin.Context) uint {
+	// Retrieve the user ID from the context
+	id, ok := c.Get("user_id")
+	if !ok {
+		unauthorizedResponse(c)
+		return 0
+	}
+
+	return uint(id.(float64))
 }

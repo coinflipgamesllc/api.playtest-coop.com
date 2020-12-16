@@ -14,9 +14,9 @@ import (
 
 // File contains all the information for a file in storage. It can be tied to a Game
 type File struct {
-	ID        uint           `json:"id" gorm:"primarykey"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
+	ID        uint           `json:"id" gorm:"primarykey" example:"123"`
+	CreatedAt time.Time      `json:"created_at" example:"2020-12-11T15:29:49.321629-08:00"`
+	UpdatedAt time.Time      `json:"updated_at" example:"2020-12-13T15:42:40.578904-08:00"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
 	UploadedBy   User `json:"-"`
@@ -25,15 +25,15 @@ type File struct {
 	Game   *Game `json:"-"`
 	GameID *uint `json:"-"`
 
-	Role    file.Role `json:"role"`
-	Caption string    `json:"caption"`
+	Role    file.Role `json:"role" example:"Image"`
+	Caption string    `json:"caption" example:"What a cool image of a game!"`
 
-	Filename string `json:"filename"`
+	Filename string `json:"filename" example:"example-image.png"`
 	Bucket   string `json:"-"`
 	Object   string `json:"-"`
 	Size     int64  `json:"-"`
 
-	URL string `json:"url" gorm:"-"`
+	URL string `json:"url" gorm:"-" example:"https://assets.playtest-coop.com/asd9fhgaoseucgewio.png"`
 }
 
 // FileRepository defines how to interact with files in database

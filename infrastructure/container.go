@@ -24,8 +24,11 @@ import (
 type Container struct {
 	// Application
 	authService *app.AuthService
+	fileService *app.FileService
 
 	// Domain
+	fileRepository domain.FileRepository
+	gameRepository domain.GameRepository
 	userRepository domain.UserRepository
 
 	// Infrastructure
@@ -39,6 +42,7 @@ type Container struct {
 
 	// UI
 	authController *controller.AuthController
+	fileController *controller.FileController
 
 	authenticated gin.HandlerFunc
 }
@@ -54,6 +58,41 @@ func (c *Container) AuthService() *app.AuthService {
 	}
 
 	return c.authService
+}
+
+func (c *Container) FileService() *app.FileService {
+	if c.fileService == nil {
+		c.fileService = &app.FileService{
+			FileRepository: c.FileRepository(),
+			GameRepository: c.GameRepository(),
+			UserRepository: c.UserRepository(),
+			Logger:         c.Logger(),
+			S3Bucket:       c.S3Bucket(),
+			S3Client:       c.S3Client(),
+		}
+	}
+
+	return c.fileService
+}
+
+func (c *Container) FileRepository() domain.FileRepository {
+	if c.fileRepository == nil {
+		c.fileRepository = &persistence.FileRepository{
+			DB: c.DB(),
+		}
+	}
+
+	return c.fileRepository
+}
+
+func (c *Container) GameRepository() domain.GameRepository {
+	if c.gameRepository == nil {
+		c.gameRepository = &persistence.GameRepository{
+			DB: c.DB(),
+		}
+	}
+
+	return c.gameRepository
 }
 
 func (c *Container) UserRepository() domain.UserRepository {
@@ -186,6 +225,16 @@ func (c *Container) AuthController() *controller.AuthController {
 	}
 
 	return c.authController
+}
+
+func (c *Container) FileController() *controller.FileController {
+	if c.fileController == nil {
+		c.fileController = &controller.FileController{
+			FileService: c.FileService(),
+		}
+	}
+
+	return c.fileController
 }
 
 // Authenticated middleware for ensuring that an HTTP request includes a valid access token
