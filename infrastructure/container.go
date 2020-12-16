@@ -25,6 +25,7 @@ type Container struct {
 	// Application
 	authService *app.AuthService
 	fileService *app.FileService
+	gameService *app.GameService
 
 	// Domain
 	fileRepository domain.FileRepository
@@ -43,6 +44,7 @@ type Container struct {
 	// UI
 	authController *controller.AuthController
 	fileController *controller.FileController
+	gameController *controller.GameController
 
 	authenticated gin.HandlerFunc
 }
@@ -73,6 +75,18 @@ func (c *Container) FileService() *app.FileService {
 	}
 
 	return c.fileService
+}
+
+func (c *Container) GameService() *app.GameService {
+	if c.gameService == nil {
+		c.gameService = &app.GameService{
+			GameRepository: c.GameRepository(),
+			UserRepository: c.UserRepository(),
+			Logger:         c.Logger(),
+		}
+	}
+
+	return c.gameService
 }
 
 func (c *Container) FileRepository() domain.FileRepository {
@@ -235,6 +249,16 @@ func (c *Container) FileController() *controller.FileController {
 	}
 
 	return c.fileController
+}
+
+func (c *Container) GameController() *controller.GameController {
+	if c.gameController == nil {
+		c.gameController = &controller.GameController{
+			GameService: c.GameService(),
+		}
+	}
+
+	return c.gameController
 }
 
 // Authenticated middleware for ensuring that an HTTP request includes a valid access token

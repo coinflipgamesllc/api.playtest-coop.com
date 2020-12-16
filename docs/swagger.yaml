@@ -31,10 +31,46 @@ definitions:
     - role
     - size
     type: object
+  controller.CreateGameRequest:
+    properties:
+      designers:
+        items:
+          type: integer
+        type: array
+      overview:
+        type: string
+      stats:
+        $ref: '#/definitions/controller.Stats'
+      title:
+        type: string
+    required:
+    - title
+    type: object
+  controller.GameResponse:
+    properties:
+      game:
+        $ref: '#/definitions/domain.Game'
+    type: object
   controller.GetUserResponse:
     properties:
       user:
         $ref: '#/definitions/domain.User'
+    type: object
+  controller.ListGamesResponse:
+    properties:
+      games:
+        items:
+          $ref: '#/definitions/domain.Game'
+        type: array
+      limit:
+        example: 100
+        type: integer
+      offset:
+        example: 50
+        type: integer
+      total:
+        example: 1000
+        type: integer
     type: object
   controller.ListUserFilesResponse:
     properties:
@@ -107,6 +143,21 @@ definitions:
     - name
     - password
     type: object
+  controller.Stats:
+    properties:
+      estimated_playtime:
+        example: 30
+        type: integer
+      max_players:
+        example: 5
+        type: integer
+      min_age:
+        example: 8
+        type: integer
+      min_players:
+        example: 1
+        type: integer
+    type: object
   controller.TokenResponse:
     properties:
       access_token:
@@ -119,6 +170,21 @@ definitions:
   controller.UnauthorizedResponse:
     properties:
       error:
+        type: string
+    type: object
+  controller.UpdateGameRequest:
+    properties:
+      designers:
+        items:
+          type: integer
+        type: array
+      overview:
+        type: string
+      stats:
+        $ref: '#/definitions/controller.Stats'
+      status:
+        type: string
+      title:
         type: string
     type: object
   controller.UpdateUserRequest:
@@ -174,6 +240,37 @@ definitions:
         example: https://assets.playtest-coop.com/asd9fhgaoseucgewio.png
         type: string
     type: object
+  domain.Game:
+    properties:
+      created_at:
+        example: "2020-12-11T15:29:49.321629-08:00"
+        type: string
+      designers:
+        items:
+          $ref: '#/definitions/domain.User'
+        type: array
+      files:
+        items:
+          $ref: '#/definitions/domain.File'
+        type: array
+      id:
+        example: 123
+        type: integer
+      overview:
+        example: In the Best Game, players take on the role of ...
+        type: string
+      stats:
+        $ref: '#/definitions/game.Stats'
+      status:
+        example: Prototype
+        type: string
+      title:
+        example: The Best Game
+        type: string
+      updated_at:
+        example: "2020-12-13T15:42:40.578904-08:00"
+        type: string
+    type: object
   domain.User:
     properties:
       created_at:
@@ -191,6 +288,17 @@ definitions:
       updated_at:
         example: "2020-12-13T15:42:40.578904-08:00"
         type: string
+    type: object
+  game.Stats:
+    properties:
+      estimated_playtime:
+        type: integer
+      max_players:
+        type: integer
+      min_age:
+        type: integer
+      min_players:
+        type: integer
     type: object
 host: api.playtest-coop.com
 info:
@@ -427,4 +535,149 @@ paths:
       summary: Generate a presigned URL for the client to upload directly to S3
       tags:
       - files
+  /games:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - example: 13
+        in: query
+        name: age
+        type: integer
+      - example: Designer McDesignerton
+        in: query
+        name: designer
+        type: string
+      - example: 100
+        in: query
+        name: limit
+        type: integer
+      - example: 50
+        in: query
+        name: offset
+        type: integer
+      - example: 2
+        in: query
+        name: playerCount
+        type: integer
+      - example: 30
+        in: query
+        name: playtime
+        type: integer
+      - example: name,desc
+        in: query
+        name: sort
+        type: string
+      - example: Prototype
+        in: query
+        name: status
+        type: string
+      - example: New Game
+        in: query
+        name: title
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.ListGamesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.RequestErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ServerErrorResponse'
+      summary: List games matching the query with pagination
+      tags:
+      - games
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Game data
+        in: body
+        name: game
+        required: true
+        schema:
+          $ref: '#/definitions/controller.CreateGameRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.GameResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.RequestErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ServerErrorResponse'
+      summary: Create a new stub game
+      tags:
+      - games
+  /games/:id:
+    get:
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.GameResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.RequestErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ServerErrorResponse'
+      summary: Return a specific game by id
+      tags:
+      - games
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Game data
+        in: body
+        name: game
+        schema:
+          $ref: '#/definitions/controller.UpdateGameRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.GameResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.RequestErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ServerErrorResponse'
+      summary: Update a specific game
+      tags:
+      - games
 swagger: "2.0"

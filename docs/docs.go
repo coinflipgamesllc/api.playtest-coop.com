@@ -371,6 +371,228 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/games": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "List games matching the query with pagination",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "example": 13,
+                        "name": "age",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "Designer McDesignerton",
+                        "name": "designer",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 100,
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 50,
+                        "name": "offset",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 2,
+                        "name": "playerCount",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "example": 30,
+                        "name": "playtime",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "name,desc",
+                        "name": "sort",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "Prototype",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "example": "New Game",
+                        "name": "title",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ListGamesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/controller.RequestErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "Create a new stub game",
+                "parameters": [
+                    {
+                        "description": "Game data",
+                        "name": "game",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/controller.CreateGameRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.GameResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/controller.RequestErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/:id": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "Return a specific game by id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Game ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.GameResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/controller.RequestErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ServerErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "Update a specific game",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Game ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Game data",
+                        "name": "game",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/controller.UpdateGameRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/controller.GameResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/controller.RequestErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ServerErrorResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -417,11 +639,65 @@ var doc = `{
                 }
             }
         },
+        "controller.CreateGameRequest": {
+            "type": "object",
+            "required": [
+                "title"
+            ],
+            "properties": {
+                "designers": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "overview": {
+                    "type": "string"
+                },
+                "stats": {
+                    "$ref": "#/definitions/controller.Stats"
+                },
+                "title": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.GameResponse": {
+            "type": "object",
+            "properties": {
+                "game": {
+                    "$ref": "#/definitions/domain.Game"
+                }
+            }
+        },
         "controller.GetUserResponse": {
             "type": "object",
             "properties": {
                 "user": {
                     "$ref": "#/definitions/domain.User"
+                }
+            }
+        },
+        "controller.ListGamesResponse": {
+            "type": "object",
+            "properties": {
+                "games": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.Game"
+                    }
+                },
+                "limit": {
+                    "type": "integer",
+                    "example": 100
+                },
+                "offset": {
+                    "type": "integer",
+                    "example": 50
+                },
+                "total": {
+                    "type": "integer",
+                    "example": 1000
                 }
             }
         },
@@ -529,6 +805,27 @@ var doc = `{
                 }
             }
         },
+        "controller.Stats": {
+            "type": "object",
+            "properties": {
+                "estimated_playtime": {
+                    "type": "integer",
+                    "example": 30
+                },
+                "max_players": {
+                    "type": "integer",
+                    "example": 5
+                },
+                "min_age": {
+                    "type": "integer",
+                    "example": 8
+                },
+                "min_players": {
+                    "type": "integer",
+                    "example": 1
+                }
+            }
+        },
         "controller.TokenResponse": {
             "type": "object",
             "properties": {
@@ -546,6 +843,29 @@ var doc = `{
             "type": "object",
             "properties": {
                 "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.UpdateGameRequest": {
+            "type": "object",
+            "properties": {
+                "designers": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
+                },
+                "overview": {
+                    "type": "string"
+                },
+                "stats": {
+                    "$ref": "#/definitions/controller.Stats"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "title": {
                     "type": "string"
                 }
             }
@@ -624,6 +944,50 @@ var doc = `{
                 }
             }
         },
+        "domain.Game": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string",
+                    "example": "2020-12-11T15:29:49.321629-08:00"
+                },
+                "designers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.User"
+                    }
+                },
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.File"
+                    }
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 123
+                },
+                "overview": {
+                    "type": "string",
+                    "example": "In the Best Game, players take on the role of ..."
+                },
+                "stats": {
+                    "$ref": "#/definitions/game.Stats"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "Prototype"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "The Best Game"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2020-12-13T15:42:40.578904-08:00"
+                }
+            }
+        },
         "domain.User": {
             "type": "object",
             "properties": {
@@ -646,6 +1010,23 @@ var doc = `{
                 "updated_at": {
                     "type": "string",
                     "example": "2020-12-13T15:42:40.578904-08:00"
+                }
+            }
+        },
+        "game.Stats": {
+            "type": "object",
+            "properties": {
+                "estimated_playtime": {
+                    "type": "integer"
+                },
+                "max_players": {
+                    "type": "integer"
+                },
+                "min_age": {
+                    "type": "integer"
+                },
+                "min_players": {
+                    "type": "integer"
                 }
             }
         }

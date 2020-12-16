@@ -36,13 +36,14 @@ func RegisterRoutes(container *infrastructure.Container) {
 			files.DELETE("/:id", container.Authenticated(), fileController.DeleteFile)
 		}
 
-		// games := v1.Group("/games")
-		// {
-		// 	games.GET("", s.handleListGames())
-		// 	games.POST("", container.Authenticated(), s.handleCreateGame())
-		// 	games.GET("/:id", s.handleGetGame())
-		// 	games.PUT("/:id", container.Authenticated(), s.handleUpdateGame())
-		// }
+		gameController := container.GameController()
+		games := v1.Group("/games")
+		{
+			games.GET("", gameController.ListGames)
+			games.POST("", container.Authenticated(), gameController.CreateGame)
+			games.GET("/:id", gameController.GetGame)
+			games.PUT("/:id", container.Authenticated(), gameController.UpdateGame)
+		}
 	}
 
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))

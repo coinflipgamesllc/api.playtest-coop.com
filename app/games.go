@@ -1,250 +1,167 @@
 package app
 
-// func (s *Server) handleListGames() gin.HandlerFunc {
-// 	type request struct {
-// 		Title       string `form:"title"`
-// 		Status      string `form:"status"`
-// 		Designer    string `form:"designer"`
-// 		PlayerCount int    `form:"player_count"`
-// 		Age         int    `form:"age"`
-// 		Playtime    int    `form:"playtime"`
-// 		Limit       int    `form:"limit"`
-// 		Offset      int    `form:"offset"`
-// 		Sort        string `form:"sort"`
-// 	}
+import (
+	"errors"
 
-// 	type response struct {
-// 		Games  []domain.Game `json:"games"`
-// 		Total  int           `json:"total"`
-// 		Limit  int           `json:"limit"`
-// 		Offset int           `json:"offset"`
-// 	}
+	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
+	"go.uber.org/zap"
+)
 
-// 	return func(c *gin.Context) {
-// 		// Validate request
-// 		var req request
-// 		if err := c.ShouldBind(&req); err != nil {
-// 			c.AbortWithStatusJSON(400, serverError(err))
-// 			return
-// 		}
+// GameService handles general interactions with games
+type GameService struct {
+	GameRepository domain.GameRepository
+	UserRepository domain.UserRepository
+	Logger         *zap.SugaredLogger
+}
 
-// 		if req.Limit == 0 {
-// 			req.Limit = 10
-// 		}
+// ListGames returns all games matching the specified query. The results are paginated
+func (s *GameService) ListGames(title, status, designer string, playerCount, age, playtime, limit, offset int, sort string) ([]domain.Game, int, error) {
+	// Limit our limit
+	if limit == 0 {
+		limit = 10
+	}
+	if limit > 100 {
+		limit = 100
+	}
 
-// 		// Fetch games
-// 		games, total, err := s.gameRepository.ListGames(
-// 			req.Title,
-// 			req.Status,
-// 			req.Designer,
-// 			req.PlayerCount,
-// 			req.Age,
-// 			req.Playtime,
-// 			req.Limit,
-// 			req.Offset,
-// 			req.Sort,
-// 		)
+	// Fetch games
+	games, total, err := s.GameRepository.ListGames(
+		title,
+		status,
+		designer,
+		playerCount,
+		age,
+		playtime,
+		limit,
+		offset,
+		sort,
+	)
 
-// 		if err != nil {
-// 			c.AbortWithStatusJSON(500, serverError(err))
-// 			return
-// 		}
+	if err != nil {
+		s.Logger.Error(err)
+		return nil, 0, err
+	}
 
-// 		c.JSON(200, response{Games: games, Total: total, Limit: req.Limit, Offset: req.Offset})
-// 	}
-// }
+	return games, total, nil
+}
 
-// func (s *Server) handleCreateGame() gin.HandlerFunc {
-// 	type stats struct {
-// 		MinPlayers        int `json:"min_players" binding:"min=0,ltefield=MaxPlayers"`
-// 		MaxPlayers        int `json:"max_players" binding:"min=0,gtefield=MinPlayers"`
-// 		MinAge            int `json:"min_age" binding:"min=0,max=99"`
-// 		EstimatedPlaytime int `json:"estimated_playtime" binding:"min=0,max=9999"`
-// 	}
+// CreateGame creates a new stub game
+func (s *GameService) CreateGame(title, overview string, designers []uint, minPlayers, maxPlayers, minAge, estimatedPlaytime int, userID uint) (*domain.Game, error) {
+	user, err := s.UserRepository.UserOfID(userID)
+	if err != nil {
+		s.Logger.Error(err)
+		return nil, err
+	}
 
-// 	type request struct {
-// 		Title     string `json:"title" binding:"required"`
-// 		Overview  string `json:"overview"`
-// 		Designers []uint `json:"designers"`
-// 		Stats     *stats `json:"stats" binding:"omitempty,dive"`
-// 	}
+	game := domain.NewGame(title, *user)
 
-// 	type response struct {
-// 		Game *domain.Game `json:"game"`
-// 	}
+	// If the request included optional information, add it now
+	if overview != "" {
+		game.UpdateOverview(overview)
+	}
 
-// 	return func(c *gin.Context) {
-// 		// Validate request
-// 		var req request
-// 		if err := c.ShouldBind(&req); err != nil {
-// 			c.AbortWithStatusJSON(400, serverError(err))
-// 			return
-// 		}
+	if len(designers) > 1 { // Index 0 is always the current user, which is included already
+		for _, designerID := range designers {
+			if designerID == user.ID {
+				continue
+			}
 
-// 		// Create our new game
-// 		currentUser := s.user(c)
-// 		game := domain.NewGame(req.Title, *currentUser)
+			designer, err := s.UserRepository.UserOfID(designerID)
+			if err != nil {
+				s.Logger.Error(err)
+				return nil, err
+			}
 
-// 		// If the request included optional information, add it now
-// 		if req.Overview != "" {
-// 			game.UpdateOverview(req.Overview)
-// 		}
+			game.AddDesigner(designer)
+		}
+	}
 
-// 		if len(req.Designers) > 1 { // Index 0 is always the current user, which is included already
-// 			for _, designerID := range req.Designers {
-// 				if designerID == currentUser.ID {
-// 					continue
-// 				}
+	game.UpdateStats(minPlayers, maxPlayers, minAge, estimatedPlaytime)
 
-// 				designer, err := s.userRepository.UserOfID(designerID)
-// 				if err != nil {
-// 					c.AbortWithStatusJSON(500, serverError(err))
-// 					return
-// 				}
+	// And save
+	err = s.GameRepository.Save(game)
+	if err != nil {
+		s.Logger.Error(err)
+		return nil, err
+	}
 
-// 				game.AddDesigner(designer)
-// 			}
-// 		}
+	return game, nil
+}
 
-// 		if req.Stats != nil {
-// 			game.UpdateStats(req.Stats.MinPlayers, req.Stats.MaxPlayers, req.Stats.MinAge, req.Stats.EstimatedPlaytime)
-// 		}
+// GetGame returns a specific game
+func (s *GameService) GetGame(gameID uint) (*domain.Game, error) {
+	game, err := s.GameRepository.GameOfID(gameID)
+	if err != nil {
+		s.Logger.Error(err)
+		return nil, err
+	}
 
-// 		// And save
-// 		err := s.gameRepository.Save(game)
-// 		if err != nil {
-// 			c.AbortWithStatusJSON(500, serverError(err))
-// 			return
-// 		}
+	return game, nil
+}
 
-// 		c.JSON(200, response{Game: game})
-// 	}
-// }
+// UpdateGame updates a specific game
+func (s *GameService) UpdateGame(gameID uint, title, overview, status string, designers []uint, minPlayers, maxPlayers, minAge, estimatedPlaytime int, userID uint) (*domain.Game, error) {
+	game, err := s.GameRepository.GameOfID(gameID)
+	if err != nil {
+		s.Logger.Error(err)
+		return nil, err
+	}
 
-// func (s *Server) handleGetGame() gin.HandlerFunc {
-// 	type response struct {
-// 		Game *domain.Game `json:"game"`
-// 	}
+	if game == nil {
+		return nil, errors.New("game not found")
+	}
 
-// 	return func(c *gin.Context) {
-// 		// Validate request
-// 		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-// 		if err != nil {
-// 			c.AbortWithStatusJSON(500, serverError(err))
-// 			return
-// 		}
+	// Ensure that our current user is allowed to edit the game
+	user, err := s.UserRepository.UserOfID(userID)
+	if err != nil {
+		s.Logger.Error(err)
+		return nil, err
+	}
 
-// 		game, err := s.gameRepository.GameOfID(uint(id))
-// 		if err != nil {
-// 			c.AbortWithStatusJSON(500, serverError(err))
-// 			return
-// 		}
+	if !game.MayBeUpdatedBy(user) {
+		return nil, errors.New("you may not edit this game")
+	}
 
-// 		if game == nil {
-// 			c.AbortWithStatusJSON(404, serverError(errors.New("not found")))
-// 			return
-// 		}
+	// Update game
+	if title != "" {
+		game.Rename(title)
+	}
 
-// 		c.JSON(200, response{Game: game})
-// 	}
-// }
+	if overview != "" {
+		game.UpdateOverview(overview)
+	}
 
-// func (s *Server) handleUpdateGame() gin.HandlerFunc {
-// 	type stats struct {
-// 		MinPlayers        int `json:"min_players" binding:"min=0,ltefield=MaxPlayers"`
-// 		MaxPlayers        int `json:"max_players" binding:"min=0,gtefield=MinPlayers"`
-// 		MinAge            int `json:"min_age" binding:"min=0,max=99"`
-// 		EstimatedPlaytime int `json:"estimated_playtime" binding:"min=0,max=9999"`
-// 	}
+	if status != "" {
+		err := game.UpdateStatus(status)
+		if err != nil {
+			s.Logger.Error(err)
+			return nil, err
+		}
+	}
 
-// 	type request struct {
-// 		Title     string `json:"title"`
-// 		Overview  string `json:"overview"`
-// 		Status    string `json:"status"`
-// 		Designers []uint `json:"designers"`
-// 		Stats     *stats `json:"stats" binding:"omitempty,dive"`
-// 	}
+	if len(designers) > 0 {
+		des := []domain.User{}
+		for _, designerID := range designers {
+			designer, err := s.UserRepository.UserOfID(designerID)
+			if err != nil {
+				s.Logger.Error(err)
+				return nil, err
+			}
 
-// 	type response struct {
-// 		Game *domain.Game `json:"game"`
-// 	}
+			des = append(des, *designer)
+		}
 
-// 	return func(c *gin.Context) {
-// 		// Pull game by ID
-// 		id, err := strconv.ParseUint(c.Param("id"), 10, 64)
-// 		if err != nil {
-// 			c.AbortWithStatusJSON(500, serverError(err))
-// 			return
-// 		}
+		game.ReplaceDesigners(des)
+	}
 
-// 		game, err := s.gameRepository.GameOfID(uint(id))
-// 		if err != nil {
-// 			c.AbortWithStatusJSON(500, serverError(err))
-// 			return
-// 		}
+	game.UpdateStats(minPlayers, maxPlayers, minAge, estimatedPlaytime)
 
-// 		if game == nil {
-// 			c.AbortWithStatusJSON(404, serverError(errors.New("not found")))
-// 			return
-// 		}
+	// And save
+	err = s.GameRepository.Save(game)
+	if err != nil {
+		s.Logger.Error(err)
+		return nil, err
+	}
 
-// 		// Ensure that our current user is allowed to edit the game
-// 		currentUser := s.user(c)
-// 		if !game.MayBeUpdatedBy(currentUser) {
-// 			c.AbortWithStatusJSON(401, serverError(errors.New("you may not edit this game")))
-// 			return
-// 		}
-
-// 		// Validate the request itself
-// 		var req request
-// 		if err := c.ShouldBind(&req); err != nil {
-// 			c.AbortWithStatusJSON(400, serverError(err))
-// 			return
-// 		}
-
-// 		// Update game
-// 		if req.Title != "" {
-// 			game.Rename(req.Title)
-// 		}
-
-// 		if req.Overview != "" {
-// 			game.UpdateOverview(req.Overview)
-// 		}
-
-// 		if req.Status != "" {
-// 			err := game.UpdateStatus(req.Status)
-// 			if err != nil {
-// 				c.AbortWithStatusJSON(400, serverError(err))
-// 				return
-// 			}
-// 		}
-
-// 		if len(req.Designers) > 0 {
-// 			designers := []domain.User{}
-// 			for _, designerID := range req.Designers {
-// 				designer, err := s.userRepository.UserOfID(designerID)
-// 				if err != nil {
-// 					c.AbortWithStatusJSON(500, serverError(err))
-// 					return
-// 				}
-
-// 				designers = append(designers, *designer)
-// 			}
-
-// 			game.ReplaceDesigners(designers)
-// 		}
-
-// 		if req.Stats != nil {
-// 			game.UpdateStats(req.Stats.MinPlayers, req.Stats.MaxPlayers, req.Stats.MinAge, req.Stats.EstimatedPlaytime)
-// 		}
-
-// 		// And save
-// 		err = s.gameRepository.Save(game)
-// 		if err != nil {
-// 			c.AbortWithStatusJSON(500, serverError(err))
-// 			return
-// 		}
-
-// 		c.JSON(200, response{Game: game})
-// 	}
-// }
+	return game, nil
+}

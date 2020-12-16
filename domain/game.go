@@ -9,14 +9,14 @@ import (
 
 // Game is the root structure containing all the information about a game
 type Game struct {
-	ID        uint           `json:"id" gorm:"primarykey"`
-	CreatedAt time.Time      `json:"created_at"`
-	UpdatedAt time.Time      `json:"updated_at"`
+	ID        uint           `json:"id" gorm:"primarykey" example:"123"`
+	CreatedAt time.Time      `json:"created_at" example:"2020-12-11T15:29:49.321629-08:00"`
+	UpdatedAt time.Time      `json:"updated_at" example:"2020-12-13T15:42:40.578904-08:00"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
-	Title     string      `json:"title" gorm:"not null"`
-	Overview  string      `json:"overview"`
-	Status    game.Status `json:"status"`
+	Title     string      `json:"title" gorm:"not null" example:"The Best Game"`
+	Overview  string      `json:"overview" example:"In the Best Game, players take on the role of ..."`
+	Status    game.Status `json:"status" example:"Prototype"`
 	Stats     game.Stats  `json:"stats" gorm:"embedded"`
 	Designers []User      `json:"designers" gorm:"many2many:game_designers;"`
 	Files     []File      `json:"files"`
