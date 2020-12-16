@@ -47,7 +47,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.LoginRequest"
+                            "$ref": "#/definitions/app.LoginRequest"
                         }
                     }
                 ],
@@ -55,7 +55,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.UserTokenResponse"
+                            "$ref": "#/definitions/app.UserTokenResponse"
                         }
                     },
                     "400": {
@@ -86,7 +86,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.SignupRequest"
+                            "$ref": "#/definitions/app.SignupRequest"
                         }
                     }
                 ],
@@ -94,7 +94,7 @@ var doc = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/controller.UserTokenResponse"
+                            "$ref": "#/definitions/app.UserTokenResponse"
                         }
                     },
                     "400": {
@@ -125,7 +125,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.RefreshTokenRequest"
+                            "$ref": "#/definitions/app.RefreshTokenRequest"
                         }
                     }
                 ],
@@ -133,7 +133,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.TokenResponse"
+                            "$ref": "#/definitions/app.TokenResponse"
                         }
                     },
                     "400": {
@@ -159,7 +159,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.GetUserResponse"
+                            "$ref": "#/definitions/app.UserResponse"
                         }
                     },
                     "401": {
@@ -193,7 +193,7 @@ var doc = `{
                         "name": "params",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/controller.UpdateUserRequest"
+                            "$ref": "#/definitions/app.UpdateUserRequest"
                         }
                     }
                 ],
@@ -201,7 +201,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.GetUserResponse"
+                            "$ref": "#/definitions/app.UserResponse"
                         }
                     },
                     "401": {
@@ -232,7 +232,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.ListUserFilesResponse"
+                            "$ref": "#/definitions/app.ListFilesResponse"
                         }
                     },
                     "500": {
@@ -261,7 +261,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.CreateFileRequest"
+                            "$ref": "#/definitions/app.CreateFileRequest"
                         }
                     }
                 ],
@@ -346,7 +346,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.PresignUploadRequest"
+                            "$ref": "#/definitions/app.PresignUploadRequest"
                         }
                     }
                 ],
@@ -354,7 +354,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.PresignUploadResponse"
+                            "$ref": "#/definitions/app.PresignUploadResponse"
                         }
                     },
                     "400": {
@@ -444,7 +444,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.ListGamesResponse"
+                            "$ref": "#/definitions/app.ListGamesResponse"
                         }
                     },
                     "400": {
@@ -479,7 +479,7 @@ var doc = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.CreateGameRequest"
+                            "$ref": "#/definitions/app.CreateGameRequest"
                         }
                     }
                 ],
@@ -487,7 +487,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.GameResponse"
+                            "$ref": "#/definitions/app.GameResponse"
                         }
                     },
                     "400": {
@@ -527,7 +527,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.GameResponse"
+                            "$ref": "#/definitions/app.GameResponse"
                         }
                     },
                     "400": {
@@ -568,7 +568,7 @@ var doc = `{
                         "name": "game",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/controller.UpdateGameRequest"
+                            "$ref": "#/definitions/app.UpdateGameRequest"
                         }
                     }
                 ],
@@ -576,7 +576,7 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.GameResponse"
+                            "$ref": "#/definitions/app.GameResponse"
                         }
                     },
                     "400": {
@@ -596,15 +596,7 @@ var doc = `{
         }
     },
     "definitions": {
-        "controller.AckResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "controller.CreateFileRequest": {
+        "app.CreateFileRequest": {
             "type": "object",
             "required": [
                 "filename",
@@ -639,7 +631,7 @@ var doc = `{
                 }
             }
         },
-        "controller.CreateGameRequest": {
+        "app.CreateGameRequest": {
             "type": "object",
             "required": [
                 "title"
@@ -655,14 +647,14 @@ var doc = `{
                     "type": "string"
                 },
                 "stats": {
-                    "$ref": "#/definitions/controller.Stats"
+                    "$ref": "#/definitions/app.Stats"
                 },
                 "title": {
                     "type": "string"
                 }
             }
         },
-        "controller.GameResponse": {
+        "app.GameResponse": {
             "type": "object",
             "properties": {
                 "game": {
@@ -670,15 +662,18 @@ var doc = `{
                 }
             }
         },
-        "controller.GetUserResponse": {
+        "app.ListFilesResponse": {
             "type": "object",
             "properties": {
-                "user": {
-                    "$ref": "#/definitions/domain.User"
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.File"
+                    }
                 }
             }
         },
-        "controller.ListGamesResponse": {
+        "app.ListGamesResponse": {
             "type": "object",
             "properties": {
                 "games": {
@@ -701,18 +696,7 @@ var doc = `{
                 }
             }
         },
-        "controller.ListUserFilesResponse": {
-            "type": "object",
-            "properties": {
-                "files": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/domain.File"
-                    }
-                }
-            }
-        },
-        "controller.LoginRequest": {
+        "app.LoginRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -729,7 +713,7 @@ var doc = `{
                 }
             }
         },
-        "controller.PresignUploadRequest": {
+        "app.PresignUploadRequest": {
             "type": "object",
             "required": [
                 "extension",
@@ -746,7 +730,7 @@ var doc = `{
                 }
             }
         },
-        "controller.PresignUploadResponse": {
+        "app.PresignUploadResponse": {
             "type": "object",
             "properties": {
                 "url": {
@@ -755,7 +739,7 @@ var doc = `{
                 }
             }
         },
-        "controller.RefreshTokenRequest": {
+        "app.RefreshTokenRequest": {
             "type": "object",
             "required": [
                 "refresh_token"
@@ -767,23 +751,7 @@ var doc = `{
                 }
             }
         },
-        "controller.RequestErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "controller.ServerErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "controller.SignupRequest": {
+        "app.SignupRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -805,7 +773,7 @@ var doc = `{
                 }
             }
         },
-        "controller.Stats": {
+        "app.Stats": {
             "type": "object",
             "properties": {
                 "estimated_playtime": {
@@ -826,7 +794,7 @@ var doc = `{
                 }
             }
         },
-        "controller.TokenResponse": {
+        "app.TokenResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -839,15 +807,7 @@ var doc = `{
                 }
             }
         },
-        "controller.UnauthorizedResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "controller.UpdateGameRequest": {
+        "app.UpdateGameRequest": {
             "type": "object",
             "properties": {
                 "designers": {
@@ -860,7 +820,7 @@ var doc = `{
                     "type": "string"
                 },
                 "stats": {
-                    "$ref": "#/definitions/controller.Stats"
+                    "$ref": "#/definitions/app.Stats"
                 },
                 "status": {
                     "type": "string"
@@ -870,7 +830,7 @@ var doc = `{
                 }
             }
         },
-        "controller.UpdateUserRequest": {
+        "app.UpdateUserRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -895,7 +855,15 @@ var doc = `{
                 }
             }
         },
-        "controller.UserTokenResponse": {
+        "app.UserResponse": {
+            "type": "object",
+            "properties": {
+                "user": {
+                    "$ref": "#/definitions/domain.User"
+                }
+            }
+        },
+        "app.UserTokenResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -908,6 +876,38 @@ var doc = `{
                 },
                 "user": {
                     "$ref": "#/definitions/domain.User"
+                }
+            }
+        },
+        "controller.AckResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.RequestErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.ServerErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.UnauthorizedResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
                 }
             }
         },

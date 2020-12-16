@@ -9,12 +9,63 @@ import (
 	"go.uber.org/zap"
 )
 
-// AuthService handles both authentication and authorization
-type AuthService struct {
-	AuthToken      string
-	Logger         *zap.SugaredLogger
-	UserRepository domain.UserRepository
-}
+type (
+	// AuthService handles both authentication and authorization
+	AuthService struct {
+		AuthToken      string
+		Logger         *zap.SugaredLogger
+		UserRepository domain.UserRepository
+	}
+
+	// Request DTOs
+
+	// UpdateUserRequest definition for updating a user
+	UpdateUserRequest struct {
+		Name        string `json:"name" binding:"omitempty,min=2" example:"User McUserton"`
+		Email       string `json:"email" binding:"omitempty,email" example:"user@example.com"`
+		NewPassword string `json:"new_password" binding:"omitempty,nefield=OldPassword,min=10" example:"AVerySecurePassword123!"`
+		OldPassword string `json:"old_password" binding:"omitempty" example:"NotASecurePassword"`
+		Pronouns    string `json:"pronouns" binding:"omitempty,contains=/" example:"they/them"`
+	}
+
+	// SignupRequest params for signing up for a new account
+	SignupRequest struct {
+		Name     string `json:"name" binding:"required,min=2" example:"User McUserton"`
+		Email    string `json:"email" binding:"required,email" example:"user@example.com"`
+		Password string `json:"password" binding:"required,min=10" example:"AVerySecurePassword123!"`
+	}
+
+	// LoginRequest params for logging in
+	LoginRequest struct {
+		Email    string `json:"email" binding:"required,email" example:"user@example.com"`
+		Password string `json:"password" binding:"required,min=10" example:"AVerySecurePassword123!"`
+	}
+
+	// RefreshTokenRequest param for refreshing access tokens
+	RefreshTokenRequest struct {
+		RefreshToken string `json:"refresh_token" binding:"required" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgxNDA1MTcsInN1YiI6MX0.D5kR_AxkqIN6xCxvP07ZUIfYxbfdTrXAe7J03nGvkPw"`
+	}
+
+	// Response DTOs
+
+	// UserResponse wraps User object
+	UserResponse struct {
+		User *domain.User `json:"user"`
+	}
+
+	// UserTokenResponse includes user object with access and refresh tokens
+	UserTokenResponse struct {
+		User         *domain.User `json:"user"`
+		AccessToken  string       `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgwNTY5NzksIm5hbWUiOiJSb2IgTmV3dG9uIiwic3ViIjoxfQ.KKUtLne51DqBPqQxZZmCFsjsGAeYRukZNcXCx6IpLN8"`
+		RefreshToken string       `json:"refresh_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgxNDA1MTcsInN1YiI6MX0.D5kR_AxkqIN6xCxvP07ZUIfYxbfdTrXAe7J03nGvkPw"`
+	}
+
+	// TokenResponse wrapper for access and refresh tokens
+	TokenResponse struct {
+		AccessToken  string `json:"access_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgwNTY5NzksIm5hbWUiOiJSb2IgTmV3dG9uIiwic3ViIjoxfQ.KKUtLne51DqBPqQxZZmCFsjsGAeYRukZNcXCx6IpLN8"`
+		RefreshToken string `json:"refresh_token" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgxNDA1MTcsInN1YiI6MX0.D5kR_AxkqIN6xCxvP07ZUIfYxbfdTrXAe7J03nGvkPw"`
+	}
+)
 
 func (s *AuthService) generateTokensForUser(user *domain.User) (string, string, error) {
 	accessToken := jwt.New(jwt.GetSigningMethod("HS256"))

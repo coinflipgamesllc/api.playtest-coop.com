@@ -7,12 +7,69 @@ import (
 	"go.uber.org/zap"
 )
 
-// GameService handles general interactions with games
-type GameService struct {
-	GameRepository domain.GameRepository
-	UserRepository domain.UserRepository
-	Logger         *zap.SugaredLogger
-}
+type (
+	// GameService handles general interactions with games
+	GameService struct {
+		GameRepository domain.GameRepository
+		UserRepository domain.UserRepository
+		Logger         *zap.SugaredLogger
+	}
+
+	// Request DTOs
+
+	// ListGamesRequest query params
+	ListGamesRequest struct {
+		Title       string `form:"title" example:"New Game"`
+		Status      string `form:"status" example:"Prototype"`
+		Designer    string `form:"designer" example:"Designer McDesignerton"`
+		PlayerCount int    `form:"player_count" example:"2"`
+		Age         int    `form:"age" example:"13"`
+		Playtime    int    `form:"playtime" example:"30"`
+		Limit       int    `form:"limit" example:"100"`
+		Offset      int    `form:"offset" example:"50"`
+		Sort        string `form:"sort" example:"name,desc"`
+	}
+
+	// Stats wrapper for game stats
+	Stats struct {
+		MinPlayers        int `json:"min_players" binding:"min=0,ltefield=MaxPlayers" example:"1"`
+		MaxPlayers        int `json:"max_players" binding:"min=0,gtefield=MinPlayers" example:"5"`
+		MinAge            int `json:"min_age" binding:"min=0,max=99" example:"8"`
+		EstimatedPlaytime int `json:"estimated_playtime" binding:"min=0,max=9999" example:"30"`
+	}
+
+	// CreateGameRequest params for creating a game
+	CreateGameRequest struct {
+		Title     string `json:"title" binding:"required"`
+		Overview  string `json:"overview"`
+		Designers []uint `json:"designers"`
+		Stats     *Stats `json:"stats" binding:"omitempty,dive"`
+	}
+
+	// UpdateGameRequest params for updating a game
+	UpdateGameRequest struct {
+		Title     string `json:"title"`
+		Overview  string `json:"overview"`
+		Status    string `json:"status"`
+		Designers []uint `json:"designers"`
+		Stats     *Stats `json:"stats" binding:"omitempty,dive"`
+	}
+
+	// Response DTOs
+
+	// ListGamesResponse paginated games list
+	ListGamesResponse struct {
+		Games  []domain.Game `json:"games"`
+		Total  int           `json:"total" example:"1000"`
+		Limit  int           `json:"limit" example:"100"`
+		Offset int           `json:"offset" example:"50"`
+	}
+
+	// GameResponse wrapper around a game
+	GameResponse struct {
+		Game *domain.Game `json:"game"`
+	}
+)
 
 // ListGames returns all games matching the specified query. The results are paginated
 func (s *GameService) ListGames(title, status, designer string, playerCount, age, playtime, limit, offset int, sort string) ([]domain.Game, int, error) {

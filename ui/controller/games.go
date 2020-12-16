@@ -4,7 +4,6 @@ import (
 	"strconv"
 
 	"github.com/coinflipgamesllc/api.playtest-coop.com/app"
-	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,40 +12,19 @@ type GameController struct {
 	GameService *app.GameService
 }
 
-// ListGamesRequest query params
-type ListGamesRequest struct {
-	Title       string `form:"title" example:"New Game"`
-	Status      string `form:"status" example:"Prototype"`
-	Designer    string `form:"designer" example:"Designer McDesignerton"`
-	PlayerCount int    `form:"player_count" example:"2"`
-	Age         int    `form:"age" example:"13"`
-	Playtime    int    `form:"playtime" example:"30"`
-	Limit       int    `form:"limit" example:"100"`
-	Offset      int    `form:"offset" example:"50"`
-	Sort        string `form:"sort" example:"name,desc"`
-}
-
-// ListGamesResponse paginated games list
-type ListGamesResponse struct {
-	Games  []domain.Game `json:"games"`
-	Total  int           `json:"total" example:"1000"`
-	Limit  int           `json:"limit" example:"100"`
-	Offset int           `json:"offset" example:"50"`
-}
-
 // ListGames list games matching the query with pagination
 // @Summary List games matching the query with pagination
 // @Accept json
 // @Produce json
-// @Param query query ListGamesRequest false "Filters for games"
-// @Success 200 {object} ListGamesResponse
+// @Param query query app.ListGamesRequest false "Filters for games"
+// @Success 200 {object} app.ListGamesResponse
 // @Failure 400 {object} RequestErrorResponse
 // @Failure 500 {object} ServerErrorResponse
 // @Tags games
 // @Router /games [get]
 func (t *GameController) ListGames(c *gin.Context) {
 	// Validate request
-	var req ListGamesRequest
+	var req app.ListGamesRequest
 	if err := c.ShouldBind(&req); err != nil {
 		requestErrorResponse(c, err.Error())
 		return
@@ -70,50 +48,29 @@ func (t *GameController) ListGames(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, ListGamesResponse{Games: games, Total: total, Limit: req.Limit, Offset: req.Offset})
-}
-
-// Stats wrapper for game stats
-type Stats struct {
-	MinPlayers        int `json:"min_players" binding:"min=0,ltefield=MaxPlayers" example:"1"`
-	MaxPlayers        int `json:"max_players" binding:"min=0,gtefield=MinPlayers" example:"5"`
-	MinAge            int `json:"min_age" binding:"min=0,max=99" example:"8"`
-	EstimatedPlaytime int `json:"estimated_playtime" binding:"min=0,max=9999" example:"30"`
-}
-
-// CreateGameRequest params for creating a game
-type CreateGameRequest struct {
-	Title     string `json:"title" binding:"required"`
-	Overview  string `json:"overview"`
-	Designers []uint `json:"designers"`
-	Stats     *Stats `json:"stats" binding:"omitempty,dive"`
-}
-
-// GameResponse wrapper around a game
-type GameResponse struct {
-	Game *domain.Game `json:"game"`
+	c.JSON(200, app.ListGamesResponse{Games: games, Total: total, Limit: req.Limit, Offset: req.Offset})
 }
 
 // CreateGame creates a new stub game
 // @Summary Create a new stub game
 // @Accept json
 // @Produce json
-// @Param game body CreateGameRequest true "Game data"
-// @Success 200 {object} GameResponse
+// @Param game body app.CreateGameRequest true "Game data"
+// @Success 200 {object} app.GameResponse
 // @Failure 400 {object} RequestErrorResponse
 // @Failure 500 {object} ServerErrorResponse
 // @Tags games
 // @Router /games [post]
 func (t *GameController) CreateGame(c *gin.Context) {
 	// Validate request
-	var req CreateGameRequest
+	var req app.CreateGameRequest
 	if err := c.ShouldBind(&req); err != nil {
 		requestErrorResponse(c, err.Error())
 		return
 	}
 
 	if req.Stats == nil {
-		req.Stats = &Stats{}
+		req.Stats = &app.Stats{}
 	}
 
 	// Create our new game
@@ -124,14 +81,14 @@ func (t *GameController) CreateGame(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, GameResponse{Game: game})
+	c.JSON(200, app.GameResponse{Game: game})
 }
 
 // GetGame returns a specific game by id
 // @Summary Return a specific game by id
 // @Produce json
 // @Param id path integer true "Game ID"
-// @Success 200 {object} GameResponse
+// @Success 200 {object} app.GameResponse
 // @Failure 400 {object} RequestErrorResponse
 // @Failure 500 {object} ServerErrorResponse
 // @Tags games
@@ -155,16 +112,7 @@ func (t *GameController) GetGame(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, GameResponse{Game: game})
-}
-
-// UpdateGameRequest params for updating a game
-type UpdateGameRequest struct {
-	Title     string `json:"title"`
-	Overview  string `json:"overview"`
-	Status    string `json:"status"`
-	Designers []uint `json:"designers"`
-	Stats     *Stats `json:"stats" binding:"omitempty,dive"`
+	c.JSON(200, app.GameResponse{Game: game})
 }
 
 // UpdateGame updates a specific game
@@ -172,8 +120,8 @@ type UpdateGameRequest struct {
 // @Accept json
 // @Produce json
 // @Param id path integer true "Game ID"
-// @Param game body UpdateGameRequest false "Game data"
-// @Success 200 {object} GameResponse
+// @Param game body app.UpdateGameRequest false "Game data"
+// @Success 200 {object} app.GameResponse
 // @Failure 400 {object} RequestErrorResponse
 // @Failure 500 {object} ServerErrorResponse
 // @Tags games
@@ -189,7 +137,7 @@ func (t *GameController) UpdateGame(c *gin.Context) {
 	userID := userID(c)
 
 	// Validate the request itself
-	var req UpdateGameRequest
+	var req app.UpdateGameRequest
 	if err := c.ShouldBind(&req); err != nil {
 		requestErrorResponse(c, err.Error())
 		return
@@ -201,5 +149,5 @@ func (t *GameController) UpdateGame(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, GameResponse{Game: game})
+	c.JSON(200, app.GameResponse{Game: game})
 }

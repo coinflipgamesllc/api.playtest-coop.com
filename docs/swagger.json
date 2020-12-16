@@ -32,7 +32,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.LoginRequest"
+                            "$ref": "#/definitions/app.LoginRequest"
                         }
                     }
                 ],
@@ -40,7 +40,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.UserTokenResponse"
+                            "$ref": "#/definitions/app.UserTokenResponse"
                         }
                     },
                     "400": {
@@ -71,7 +71,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.SignupRequest"
+                            "$ref": "#/definitions/app.SignupRequest"
                         }
                     }
                 ],
@@ -79,7 +79,7 @@
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/controller.UserTokenResponse"
+                            "$ref": "#/definitions/app.UserTokenResponse"
                         }
                     },
                     "400": {
@@ -110,7 +110,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.RefreshTokenRequest"
+                            "$ref": "#/definitions/app.RefreshTokenRequest"
                         }
                     }
                 ],
@@ -118,7 +118,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.TokenResponse"
+                            "$ref": "#/definitions/app.TokenResponse"
                         }
                     },
                     "400": {
@@ -144,7 +144,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.GetUserResponse"
+                            "$ref": "#/definitions/app.UserResponse"
                         }
                     },
                     "401": {
@@ -178,7 +178,7 @@
                         "name": "params",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/controller.UpdateUserRequest"
+                            "$ref": "#/definitions/app.UpdateUserRequest"
                         }
                     }
                 ],
@@ -186,7 +186,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.GetUserResponse"
+                            "$ref": "#/definitions/app.UserResponse"
                         }
                     },
                     "401": {
@@ -217,7 +217,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.ListUserFilesResponse"
+                            "$ref": "#/definitions/app.ListFilesResponse"
                         }
                     },
                     "500": {
@@ -246,7 +246,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.CreateFileRequest"
+                            "$ref": "#/definitions/app.CreateFileRequest"
                         }
                     }
                 ],
@@ -331,7 +331,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.PresignUploadRequest"
+                            "$ref": "#/definitions/app.PresignUploadRequest"
                         }
                     }
                 ],
@@ -339,7 +339,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.PresignUploadResponse"
+                            "$ref": "#/definitions/app.PresignUploadResponse"
                         }
                     },
                     "400": {
@@ -429,7 +429,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.ListGamesResponse"
+                            "$ref": "#/definitions/app.ListGamesResponse"
                         }
                     },
                     "400": {
@@ -464,7 +464,7 @@
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/controller.CreateGameRequest"
+                            "$ref": "#/definitions/app.CreateGameRequest"
                         }
                     }
                 ],
@@ -472,7 +472,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.GameResponse"
+                            "$ref": "#/definitions/app.GameResponse"
                         }
                     },
                     "400": {
@@ -512,7 +512,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.GameResponse"
+                            "$ref": "#/definitions/app.GameResponse"
                         }
                     },
                     "400": {
@@ -553,7 +553,7 @@
                         "name": "game",
                         "in": "body",
                         "schema": {
-                            "$ref": "#/definitions/controller.UpdateGameRequest"
+                            "$ref": "#/definitions/app.UpdateGameRequest"
                         }
                     }
                 ],
@@ -561,7 +561,7 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/controller.GameResponse"
+                            "$ref": "#/definitions/app.GameResponse"
                         }
                     },
                     "400": {
@@ -581,15 +581,7 @@
         }
     },
     "definitions": {
-        "controller.AckResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "controller.CreateFileRequest": {
+        "app.CreateFileRequest": {
             "type": "object",
             "required": [
                 "filename",
@@ -624,7 +616,7 @@
                 }
             }
         },
-        "controller.CreateGameRequest": {
+        "app.CreateGameRequest": {
             "type": "object",
             "required": [
                 "title"
@@ -640,14 +632,14 @@
                     "type": "string"
                 },
                 "stats": {
-                    "$ref": "#/definitions/controller.Stats"
+                    "$ref": "#/definitions/app.Stats"
                 },
                 "title": {
                     "type": "string"
                 }
             }
         },
-        "controller.GameResponse": {
+        "app.GameResponse": {
             "type": "object",
             "properties": {
                 "game": {
@@ -655,15 +647,18 @@
                 }
             }
         },
-        "controller.GetUserResponse": {
+        "app.ListFilesResponse": {
             "type": "object",
             "properties": {
-                "user": {
-                    "$ref": "#/definitions/domain.User"
+                "files": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/domain.File"
+                    }
                 }
             }
         },
-        "controller.ListGamesResponse": {
+        "app.ListGamesResponse": {
             "type": "object",
             "properties": {
                 "games": {
@@ -686,18 +681,7 @@
                 }
             }
         },
-        "controller.ListUserFilesResponse": {
-            "type": "object",
-            "properties": {
-                "files": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/domain.File"
-                    }
-                }
-            }
-        },
-        "controller.LoginRequest": {
+        "app.LoginRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -714,7 +698,7 @@
                 }
             }
         },
-        "controller.PresignUploadRequest": {
+        "app.PresignUploadRequest": {
             "type": "object",
             "required": [
                 "extension",
@@ -731,7 +715,7 @@
                 }
             }
         },
-        "controller.PresignUploadResponse": {
+        "app.PresignUploadResponse": {
             "type": "object",
             "properties": {
                 "url": {
@@ -740,7 +724,7 @@
                 }
             }
         },
-        "controller.RefreshTokenRequest": {
+        "app.RefreshTokenRequest": {
             "type": "object",
             "required": [
                 "refresh_token"
@@ -752,23 +736,7 @@
                 }
             }
         },
-        "controller.RequestErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "controller.ServerErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "controller.SignupRequest": {
+        "app.SignupRequest": {
             "type": "object",
             "required": [
                 "email",
@@ -790,7 +758,7 @@
                 }
             }
         },
-        "controller.Stats": {
+        "app.Stats": {
             "type": "object",
             "properties": {
                 "estimated_playtime": {
@@ -811,7 +779,7 @@
                 }
             }
         },
-        "controller.TokenResponse": {
+        "app.TokenResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -824,15 +792,7 @@
                 }
             }
         },
-        "controller.UnauthorizedResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                }
-            }
-        },
-        "controller.UpdateGameRequest": {
+        "app.UpdateGameRequest": {
             "type": "object",
             "properties": {
                 "designers": {
@@ -845,7 +805,7 @@
                     "type": "string"
                 },
                 "stats": {
-                    "$ref": "#/definitions/controller.Stats"
+                    "$ref": "#/definitions/app.Stats"
                 },
                 "status": {
                     "type": "string"
@@ -855,7 +815,7 @@
                 }
             }
         },
-        "controller.UpdateUserRequest": {
+        "app.UpdateUserRequest": {
             "type": "object",
             "properties": {
                 "email": {
@@ -880,7 +840,15 @@
                 }
             }
         },
-        "controller.UserTokenResponse": {
+        "app.UserResponse": {
+            "type": "object",
+            "properties": {
+                "user": {
+                    "$ref": "#/definitions/domain.User"
+                }
+            }
+        },
+        "app.UserTokenResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -893,6 +861,38 @@
                 },
                 "user": {
                     "$ref": "#/definitions/domain.User"
+                }
+            }
+        },
+        "controller.AckResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.RequestErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.ServerErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "controller.UnauthorizedResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
                 }
             }
         },

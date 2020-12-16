@@ -11,15 +11,47 @@ import (
 	"go.uber.org/zap"
 )
 
-// FileService handles file uploads/downloads and indirect interaction with S3
-type FileService struct {
-	FileRepository domain.FileRepository
-	GameRepository domain.GameRepository
-	UserRepository domain.UserRepository
-	Logger         *zap.SugaredLogger
-	S3Bucket       string
-	S3Client       *minio.Client
-}
+type (
+	// FileService handles file uploads/downloads and indirect interaction with S3
+	FileService struct {
+		FileRepository domain.FileRepository
+		GameRepository domain.GameRepository
+		UserRepository domain.UserRepository
+		Logger         *zap.SugaredLogger
+		S3Bucket       string
+		S3Client       *minio.Client
+	}
+
+	// Request DTOs
+
+	// PresignUploadRequest params for presigning a URL
+	PresignUploadRequest struct {
+		Name      string `form:"name" binding:"required" example:"my-awesome-file.jpg"`
+		Extension string `form:"extension" binding:"required" example:"jpg"`
+	}
+
+	// CreateFileRequest params for storing a record of a file
+	CreateFileRequest struct {
+		Role     string `json:"role" binding:"required" example:"Image"`
+		Caption  string `json:"caption" example:"What a cool image of a game!"`
+		Filename string `json:"filename" binding:"required" example:"example-image.png"`
+		Object   string `json:"object" binding:"required" example:"asd9fhgaoseucgewio.png"`
+		Size     int64  `json:"size" binding:"required" example:"1241231"`
+		GameID   uint   `json:"game" example:"123"`
+	}
+
+	// Response DTOs
+
+	// PresignUploadResponse wrapper for presigned URL
+	PresignUploadResponse struct {
+		URL string `json:"url" example:"https://assets.playtest-coop.com/..."`
+	}
+
+	// ListFilesResponse wrapper for files belonging to a user
+	ListFilesResponse struct {
+		Files []domain.File `json:"files"`
+	}
+)
 
 // PresignUpload generates a presigned URL for uploading a file
 func (s *FileService) PresignUpload(name, extension string) (string, error) {
