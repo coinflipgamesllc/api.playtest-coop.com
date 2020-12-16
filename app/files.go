@@ -70,7 +70,7 @@ func (s *FileService) PresignUpload(name, extension string) (string, error) {
 }
 
 // CreateFile stores a file in the database, optionally tied to a game
-func (s *FileService) CreateFile(userID uint, role, filename, object string, size int64, caption string, gameID uint) (*domain.File, error) {
+func (s *FileService) CreateFile(req *CreateFileRequest, userID uint) (*domain.File, error) {
 	user, err := s.UserRepository.UserOfID(userID)
 	if err != nil {
 		s.Logger.Error(err)
@@ -79,15 +79,15 @@ func (s *FileService) CreateFile(userID uint, role, filename, object string, siz
 
 	// Create the file
 	var file *domain.File
-	switch role {
+	switch req.Role {
 	case "Image":
-		file, err = domain.NewImage(*user, filename, s.S3Bucket, object, size)
+		file, err = domain.NewImage(*user, req.Filename, s.S3Bucket, req.Object, req.Size)
 	case "SellSheet":
-		file, err = domain.NewSellSheet(*user, filename, s.S3Bucket, object, size)
+		file, err = domain.NewSellSheet(*user, req.Filename, s.S3Bucket, req.Object, req.Size)
 	case "PrintAndPlay":
-		file, err = domain.NewPrintAndPlay(*user, filename, s.S3Bucket, object, size)
+		file, err = domain.NewPrintAndPlay(*user, req.Filename, s.S3Bucket, req.Object, req.Size)
 	default:
-		err = fmt.Errorf("invalid role '%s'", role)
+		err = fmt.Errorf("invalid role '%s'", req.Role)
 	}
 
 	if err != nil {
@@ -96,9 +96,9 @@ func (s *FileService) CreateFile(userID uint, role, filename, object string, siz
 	}
 
 	// If we included a game, tie it to the game
-	if gameID != 0 {
+	if req.GameID != 0 {
 		// Make sure the user is allowed to edit this game
-		game, err := s.GameRepository.GameOfID(gameID)
+		game, err := s.GameRepository.GameOfID(req.GameID)
 		if err != nil || game == nil {
 			s.Logger.Error(err)
 			return nil, err

@@ -95,7 +95,7 @@ func (s *AuthService) generateTokensForUser(user *domain.User) (string, string, 
 }
 
 // UpdateUser will update the user with the specified values
-func (s *AuthService) UpdateUser(userID uint, name, email, newPassword, oldPassword, pronouns string) (*domain.User, error) {
+func (s *AuthService) UpdateUser(req *UpdateUserRequest, userID uint) (*domain.User, error) {
 	user, err := s.FetchUser(userID)
 	if err != nil {
 		return nil, err
@@ -106,24 +106,24 @@ func (s *AuthService) UpdateUser(userID uint, name, email, newPassword, oldPassw
 	}
 
 	// Update the user
-	if name != "" {
-		user.Rename(name)
+	if req.Name != "" {
+		user.Rename(req.Name)
 	}
 
-	if email != "" {
-		user.ChangeEmail(email)
+	if req.Email != "" {
+		user.ChangeEmail(req.Email)
 	}
 
-	if newPassword != "" && oldPassword != "" {
-		err := user.ChangePassword(newPassword, oldPassword)
+	if req.NewPassword != "" && req.OldPassword != "" {
+		err := user.ChangePassword(req.NewPassword, req.OldPassword)
 		if err != nil {
 			s.Logger.Error(err.Error(), "user", userID)
 			return nil, err
 		}
 	}
 
-	if pronouns != "" {
-		user.SetPronouns(pronouns)
+	if req.Pronouns != "" {
+		user.SetPronouns(req.Pronouns)
 	}
 
 	// Save changes

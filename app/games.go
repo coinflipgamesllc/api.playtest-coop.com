@@ -72,26 +72,26 @@ type (
 )
 
 // ListGames returns all games matching the specified query. The results are paginated
-func (s *GameService) ListGames(title, status, designer string, playerCount, age, playtime, limit, offset int, sort string) ([]domain.Game, int, error) {
+func (s *GameService) ListGames(req *ListGamesRequest) ([]domain.Game, int, error) {
 	// Limit our limit
-	if limit == 0 {
-		limit = 10
+	if req.Limit == 0 {
+		req.Limit = 10
 	}
-	if limit > 100 {
-		limit = 100
+	if req.Limit > 100 {
+		req.Limit = 100
 	}
 
 	// Fetch games
 	games, total, err := s.GameRepository.ListGames(
-		title,
-		status,
-		designer,
-		playerCount,
-		age,
-		playtime,
-		limit,
-		offset,
-		sort,
+		req.Title,
+		req.Status,
+		req.Designer,
+		req.PlayerCount,
+		req.Age,
+		req.Playtime,
+		req.Limit,
+		req.Offset,
+		req.Sort,
 	)
 
 	if err != nil {
@@ -103,22 +103,22 @@ func (s *GameService) ListGames(title, status, designer string, playerCount, age
 }
 
 // CreateGame creates a new stub game
-func (s *GameService) CreateGame(title, overview string, designers []uint, minPlayers, maxPlayers, minAge, estimatedPlaytime int, userID uint) (*domain.Game, error) {
+func (s *GameService) CreateGame(req *CreateGameRequest, userID uint) (*domain.Game, error) {
 	user, err := s.UserRepository.UserOfID(userID)
 	if err != nil {
 		s.Logger.Error(err)
 		return nil, err
 	}
 
-	game := domain.NewGame(title, *user)
+	game := domain.NewGame(req.Title, *user)
 
 	// If the request included optional information, add it now
-	if overview != "" {
-		game.UpdateOverview(overview)
+	if req.Overview != "" {
+		game.UpdateOverview(req.Overview)
 	}
 
-	if len(designers) > 1 { // Index 0 is always the current user, which is included already
-		for _, designerID := range designers {
+	if len(req.Designers) > 1 { // Index 0 is always the current user, which is included already
+		for _, designerID := range req.Designers {
 			if designerID == user.ID {
 				continue
 			}
@@ -133,7 +133,9 @@ func (s *GameService) CreateGame(title, overview string, designers []uint, minPl
 		}
 	}
 
-	game.UpdateStats(minPlayers, maxPlayers, minAge, estimatedPlaytime)
+	if req.Stats != nil {
+		game.UpdateStats(req.Stats.MinPlayers, req.Stats.MaxPlayers, req.Stats.MinAge, req.Stats.EstimatedPlaytime)
+	}
 
 	// And save
 	err = s.GameRepository.Save(game)
@@ -157,7 +159,7 @@ func (s *GameService) GetGame(gameID uint) (*domain.Game, error) {
 }
 
 // UpdateGame updates a specific game
-func (s *GameService) UpdateGame(gameID uint, title, overview, status string, designers []uint, minPlayers, maxPlayers, minAge, estimatedPlaytime int, userID uint) (*domain.Game, error) {
+func (s *GameService) UpdateGame(gameID uint, req *UpdateGameRequest, userID uint) (*domain.Game, error) {
 	game, err := s.GameRepository.GameOfID(gameID)
 	if err != nil {
 		s.Logger.Error(err)
@@ -180,38 +182,40 @@ func (s *GameService) UpdateGame(gameID uint, title, overview, status string, de
 	}
 
 	// Update game
-	if title != "" {
-		game.Rename(title)
+	if req.Title != "" {
+		game.Rename(req.Title)
 	}
 
-	if overview != "" {
-		game.UpdateOverview(overview)
+	if req.Overview != "" {
+		game.UpdateOverview(req.Overview)
 	}
 
-	if status != "" {
-		err := game.UpdateStatus(status)
+	if req.Status != "" {
+		err := game.UpdateStatus(req.Status)
 		if err != nil {
 			s.Logger.Error(err)
 			return nil, err
 		}
 	}
 
-	if len(designers) > 0 {
-		des := []domain.User{}
-		for _, designerID := range designers {
+	if len(req.Designers) > 0 {
+		designers := []domain.User{}
+		for _, designerID := range req.Designers {
 			designer, err := s.UserRepository.UserOfID(designerID)
 			if err != nil {
 				s.Logger.Error(err)
 				return nil, err
 			}
 
-			des = append(des, *designer)
+			designers = append(designers, *designer)
 		}
 
-		game.ReplaceDesigners(des)
+		game.ReplaceDesigners(designers)
 	}
 
-	game.UpdateStats(minPlayers, maxPlayers, minAge, estimatedPlaytime)
+	if req.Stats != nil {
+		game.UpdateStats(req.Stats.MinPlayers, req.Stats.MaxPlayers, req.Stats.MinAge, req.Stats.EstimatedPlaytime)
+	}
 
 	// And save
 	err = s.GameRepository.Save(game)

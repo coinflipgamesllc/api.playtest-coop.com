@@ -57,7 +57,7 @@ func (t *AuthController) UpdateUser(c *gin.Context) {
 		return
 	}
 
-	user, err := t.AuthService.UpdateUser(userID, req.Name, req.Email, req.NewPassword, req.OldPassword, req.Pronouns)
+	user, err := t.AuthService.UpdateUser(&req, userID)
 	if err != nil {
 		serverErrorResponse(c, "failed to update user")
 		return

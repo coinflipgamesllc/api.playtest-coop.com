@@ -31,17 +31,7 @@ func (t *GameController) ListGames(c *gin.Context) {
 	}
 
 	// Fetch games
-	games, total, err := t.GameService.ListGames(
-		req.Title,
-		req.Status,
-		req.Designer,
-		req.PlayerCount,
-		req.Age,
-		req.Playtime,
-		req.Limit,
-		req.Offset,
-		req.Sort,
-	)
+	games, total, err := t.GameService.ListGames(&req)
 
 	if err != nil {
 		serverErrorResponse(c, "failed to fetch games")
@@ -69,13 +59,9 @@ func (t *GameController) CreateGame(c *gin.Context) {
 		return
 	}
 
-	if req.Stats == nil {
-		req.Stats = &app.Stats{}
-	}
-
 	// Create our new game
 	userID := userID(c)
-	game, err := t.GameService.CreateGame(req.Title, req.Overview, req.Designers, req.Stats.MinPlayers, req.Stats.MaxPlayers, req.Stats.MinAge, req.Stats.EstimatedPlaytime, userID)
+	game, err := t.GameService.CreateGame(&req, userID)
 	if err != nil {
 		serverErrorResponse(c, "failed to create game")
 		return
@@ -143,7 +129,7 @@ func (t *GameController) UpdateGame(c *gin.Context) {
 		return
 	}
 
-	game, err := t.GameService.UpdateGame(uint(gameID), req.Title, req.Overview, req.Status, req.Designers, req.Stats.MinPlayers, req.Stats.MaxPlayers, req.Stats.MinAge, req.Stats.EstimatedPlaytime, userID)
+	game, err := t.GameService.UpdateGame(uint(gameID), &req, userID)
 	if err != nil {
 		serverErrorResponse(c, "failed to update game")
 		return

@@ -58,7 +58,7 @@ func (t *FileController) CreateFile(c *gin.Context) {
 	}
 
 	userID := userID(c)
-	_, err := t.FileService.CreateFile(userID, req.Role, req.Filename, req.Object, req.Size, req.Caption, req.GameID)
+	_, err := t.FileService.CreateFile(&req, userID)
 
 	if err != nil {
 		requestErrorResponse(c, "failed to save file")
