@@ -20,6 +20,12 @@ func main() {
 	container := &infrastructure.Container{}
 	ui.RegisterRoutes(container)
 
+	// Start events handlers
+	events := container.EventHandler()
+	go func() {
+		events.ListenForEvents()
+	}()
+
 	router := container.Router()
 	router.Run(":" + viper.GetString("PORT"))
 }

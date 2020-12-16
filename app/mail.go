@@ -1,59 +1,76 @@
 package app
 
-const fromAddress = "no-reply@playtest-coop.com"
+import (
+	"bytes"
+	"context"
+	"html/template"
+	"time"
 
-// func (s *Server) welcomeEmail(email, name, verificationID string) error {
-// 	templateData := struct {
-// 		Name string
-// 		URL  string
-// 	}{
-// 		Name: name,
-// 		URL:  s.hostname + "/v1/auth/verify-email/" + verificationID,
-// 	}
+	"github.com/mailgun/mailgun-go/v4"
+)
 
-// 	tpl := s.templates["email/welcome"]
-// 	buf := new(bytes.Buffer)
-// 	if err := tpl.Execute(buf, templateData); err != nil {
-// 		return err
-// 	}
+// MailService handles sending emails
+type MailService struct {
+	FromAddress string
+	Hostname    string
+	MailClient  mailgun.Mailgun
+	Templates   map[string]*template.Template
+}
 
-// 	return s.send(email, "Welcome to Playtest Co-op!", buf.String())
-// }
+// SendWelcomeEmail sends a welcome email to a user. A verification link is included
+func (s *MailService) SendWelcomeEmail(email, name, verificationID string) error {
+	templateData := struct {
+		Name string
+		URL  string
+	}{
+		Name: name,
+		URL:  s.Hostname + "/v1/auth/verify-email/" + verificationID,
+	}
 
-// func (s *Server) verifyEmail(email, name, verificationID string) error {
-// 	templateData := struct {
-// 		Name string
-// 		URL  string
-// 	}{
-// 		Name: name,
-// 		URL:  s.hostname + "/v1/auth/verify-email/" + verificationID,
-// 	}
+	tpl := s.Templates["email/welcome"]
+	buf := new(bytes.Buffer)
+	if err := tpl.Execute(buf, templateData); err != nil {
+		return err
+	}
 
-// 	tpl := s.templates["email/verify-email"]
-// 	buf := new(bytes.Buffer)
-// 	if err := tpl.Execute(buf, templateData); err != nil {
-// 		return err
-// 	}
+	return s.send(email, "Welcome to Playtest Co-op!", buf.String())
+}
 
-// 	return s.send(email, "Verify your email", buf.String())
-// }
+// SendVerifyEmail sends an email to a user to verify that their email address is legit
+func (s *MailService) SendVerifyEmail(email, name, verificationID string) error {
+	templateData := struct {
+		Name string
+		URL  string
+	}{
+		Name: name,
+		URL:  s.Hostname + "/v1/auth/verify-email/" + verificationID,
+	}
 
-// func (s *Server) send(toAddress, subject, body string) error {
-// 	message := s.mail.NewMessage(
-// 		fromAddress,
-// 		subject,
-// 		"",
-// 		toAddress,
-// 	)
-// 	message.SetHtml(body)
+	tpl := s.Templates["email/verify-email"]
+	buf := new(bytes.Buffer)
+	if err := tpl.Execute(buf, templateData); err != nil {
+		return err
+	}
 
-// 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
-// 	defer cancel()
+	return s.send(email, "Verify your email", buf.String())
+}
 
-// 	_, _, err := s.mail.Send(ctx, message)
-// 	if err != nil {
-// 		return err
-// 	}
+func (s *MailService) send(toAddress, subject, body string) error {
+	message := s.MailClient.NewMessage(
+		s.FromAddress,
+		subject,
+		"",
+		toAddress,
+	)
+	message.SetHtml(body)
 
-// 	return nil
-// }
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+
+	_, _, err := s.MailClient.Send(ctx, message)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

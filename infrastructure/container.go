@@ -2,13 +2,14 @@ package infrastructure
 
 import (
 	"fmt"
+	"html/template"
 	"log"
-	"text/template"
 
 	"github.com/coinflipgamesllc/api.playtest-coop.com/app"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/infrastructure/persistence"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/ui/controller"
+	"github.com/coinflipgamesllc/api.playtest-coop.com/ui/events"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/ui/middleware"
 	"github.com/gin-gonic/gin"
 	"github.com/mailgun/mailgun-go/v4"
@@ -26,6 +27,7 @@ type Container struct {
 	authService *app.AuthService
 	fileService *app.FileService
 	gameService *app.GameService
+	mailService *app.MailService
 
 	// Domain
 	fileRepository domain.FileRepository
@@ -47,6 +49,8 @@ type Container struct {
 	gameController *controller.GameController
 
 	authenticated gin.HandlerFunc
+
+	eventHandler *events.EventHandler
 }
 
 // AuthService for handling authentication & authorization
@@ -87,6 +91,19 @@ func (c *Container) GameService() *app.GameService {
 	}
 
 	return c.gameService
+}
+
+func (c *Container) MailService() *app.MailService {
+	if c.mailService == nil {
+		c.mailService = &app.MailService{
+			FromAddress: viper.GetString("FROM_ADDRESS"),
+			Hostname:    viper.GetString("HOSTNAME"),
+			MailClient:  c.Mail(),
+			Templates:   c.Templates(),
+		}
+	}
+
+	return c.mailService
 }
 
 func (c *Container) FileRepository() domain.FileRepository {
@@ -173,7 +190,6 @@ func (c *Container) Router() *gin.Engine {
 
 		// Load templates
 		c.router.LoadHTMLGlob("ui/template/error/*")
-		c.Templates()
 	}
 
 	return c.router
@@ -268,4 +284,15 @@ func (c *Container) Authenticated() gin.HandlerFunc {
 	}
 
 	return c.authenticated
+}
+
+func (c *Container) EventHandler() *events.EventHandler {
+	if c.eventHandler == nil {
+		c.eventHandler = &events.EventHandler{
+			MailService: c.MailService(),
+			Logger:      c.Logger(),
+		}
+	}
+
+	return c.eventHandler
 }
