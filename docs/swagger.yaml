@@ -99,14 +99,6 @@ definitions:
         example: https://assets.playtest-coop.com/...
         type: string
     type: object
-  app.RefreshTokenRequest:
-    properties:
-      refresh_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgxNDA1MTcsInN1YiI6MX0.D5kR_AxkqIN6xCxvP07ZUIfYxbfdTrXAe7J03nGvkPw
-        type: string
-    required:
-    - refresh_token
-    type: object
   app.ResetPasswordRequest:
     properties:
       email:
@@ -146,15 +138,6 @@ definitions:
         example: 1
         type: integer
     type: object
-  app.TokenResponse:
-    properties:
-      access_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgwNTY5NzksIm5hbWUiOiJSb2IgTmV3dG9uIiwic3ViIjoxfQ.KKUtLne51DqBPqQxZZmCFsjsGAeYRukZNcXCx6IpLN8
-        type: string
-      refresh_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgxNDA1MTcsInN1YiI6MX0.D5kR_AxkqIN6xCxvP07ZUIfYxbfdTrXAe7J03nGvkPw
-        type: string
-    type: object
   app.UpdateGameRequest:
     properties:
       designers:
@@ -190,17 +173,6 @@ definitions:
     type: object
   app.UserResponse:
     properties:
-      user:
-        $ref: '#/definitions/domain.User'
-    type: object
-  app.UserTokenResponse:
-    properties:
-      access_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgwNTY5NzksIm5hbWUiOiJSb2IgTmV3dG9uIiwic3ViIjoxfQ.KKUtLne51DqBPqQxZZmCFsjsGAeYRukZNcXCx6IpLN8
-        type: string
-      refresh_token:
-        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgxNDA1MTcsInN1YiI6MX0.D5kR_AxkqIN6xCxvP07ZUIfYxbfdTrXAe7J03nGvkPw
-        type: string
       user:
         $ref: '#/definitions/domain.User'
     type: object
@@ -339,12 +311,28 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/app.UserTokenResponse'
+            $ref: '#/definitions/app.UserResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/controller.RequestErrorResponse'
       summary: Authenticate a user
+      tags:
+      - auth
+  /auth/logout:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/controller.AckResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.RequestErrorResponse'
+      summary: End an authenticated session
       tags:
       - auth
   /auth/reset-password:
@@ -389,39 +377,12 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/app.UserTokenResponse'
+            $ref: '#/definitions/app.UserResponse'
         "400":
           description: Bad Request
           schema:
             $ref: '#/definitions/controller.RequestErrorResponse'
       summary: Create and authenticates a new user
-      tags:
-      - auth
-  /auth/token:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: Refresh token originally acquired from /auth/token, /auth/signup,
-          or /auth/login
-        in: body
-        name: refresh_token
-        required: true
-        schema:
-          $ref: '#/definitions/app.RefreshTokenRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/app.TokenResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/controller.RequestErrorResponse'
-      summary: Regenerate the access token and refresh token, given a valid refresh
-        token.
       tags:
       - auth
   /auth/user:

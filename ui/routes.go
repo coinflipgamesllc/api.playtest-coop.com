@@ -25,7 +25,7 @@ func RegisterRoutes(container *infrastructure.Container) {
 
 			auth.POST("/signup", authController.Signup)
 			auth.POST("/login", authController.Login)
-			auth.POST("/token", authController.RefreshToken)
+			auth.GET("/logout", authController.Logout)
 			auth.GET("/verify-email/:id", authController.VerifyEmail)
 		}
 

@@ -5,6 +5,7 @@ import (
 
 	"github.com/coinflipgamesllc/api.playtest-coop.com/app"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 )
 
@@ -105,7 +106,7 @@ func (t *AuthController) RequestResetPassword(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param credentials body app.SignupRequest true "User name, email, and password"
-// @Success 201 {object} app.UserTokenResponse
+// @Success 201 {object} app.UserResponse
 // @Failure 400 {object} RequestErrorResponse
 // @Tags auth
 // @Router /auth/signup [post]
@@ -117,13 +118,18 @@ func (t *AuthController) Signup(c *gin.Context) {
 		return
 	}
 
-	user, at, rt, err := t.AuthService.Signup(req.Name, req.Email, req.Password)
+	user, err := t.AuthService.Signup(req.Name, req.Email, req.Password)
 	if err != nil {
 		requestErrorResponse(c, "failed to create account")
 		return
 	}
 
-	c.JSON(201, app.UserTokenResponse{User: user, AccessToken: at, RefreshToken: rt})
+	// Cookie time!
+	session := sessions.Default(c)
+	session.Set("user_id", user.ID)
+	session.Save()
+
+	c.JSON(201, app.UserResponse{User: user})
 }
 
 // Login authenticates a user
@@ -131,7 +137,7 @@ func (t *AuthController) Signup(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param credentials body app.LoginRequest true "User email/password combo"
-// @Success 200 {object} app.UserTokenResponse
+// @Success 200 {object} app.UserResponse
 // @Failure 400 {object} RequestErrorResponse
 // @Tags auth
 // @Router /auth/login [post]
@@ -144,7 +150,7 @@ func (t *AuthController) Login(c *gin.Context) {
 	}
 
 	// Attempt to log in
-	user, at, rt, err := t.AuthService.Login(req.Email, req.Password)
+	user, err := t.AuthService.Login(req.Email, req.Password)
 	if err != nil {
 		if errors.Is(err, domain.UserNotFound{}) {
 			notFoundResponse(c, err.Error())
@@ -160,39 +166,27 @@ func (t *AuthController) Login(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, app.UserTokenResponse{User: user, AccessToken: at, RefreshToken: rt})
+	// Cookie time!
+	session := sessions.Default(c)
+	session.Set("user_id", user.ID)
+	session.Save()
+
+	c.JSON(200, app.UserResponse{User: user})
 }
 
-// RefreshToken regenerates the access token and refresh token, given a valid refresh token.
-// @Summary Regenerate the access token and refresh token, given a valid refresh token.
-// @Accept json
+// Logout ends an authenticated session
+// @Summary End an authenticated session
 // @Produce json
-// @Param refresh_token body app.RefreshTokenRequest true "Refresh token originally acquired from /auth/token, /auth/signup, or /auth/login"
-// @Success 200 {object} app.TokenResponse
+// @Success 200 {object} AckResponse
 // @Failure 400 {object} RequestErrorResponse
 // @Tags auth
-// @Router /auth/token [post]
-func (t *AuthController) RefreshToken(c *gin.Context) {
-	// Validate request
-	var req app.RefreshTokenRequest
-	if err := c.ShouldBind(&req); err != nil {
-		requestErrorResponse(c, err.Error())
-		return
-	}
+// @Router /auth/logout [get]
+func (t *AuthController) Logout(c *gin.Context) {
+	session := sessions.Default(c)
+	session.Delete("user_id")
+	session.Save()
 
-	// Validate token
-	at, rt, err := t.AuthService.RefreshToken(req.RefreshToken)
-	if err != nil {
-		if errors.Is(err, domain.UserNotFound{}) {
-			notFoundResponse(c, err.Error())
-			return
-		}
-
-		requestErrorResponse(c, "failed to refresh tokens")
-		return
-	}
-
-	c.JSON(200, app.TokenResponse{AccessToken: at, RefreshToken: rt})
+	ackResponse(c)
 }
 
 // Non-API routes

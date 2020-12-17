@@ -11,6 +11,8 @@ import (
 	"github.com/coinflipgamesllc/api.playtest-coop.com/ui/controller"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/ui/events"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/ui/middleware"
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
 	"github.com/mailgun/mailgun-go/v4"
 	"github.com/minio/minio-go/v7"
@@ -41,6 +43,7 @@ type Container struct {
 	router    *gin.Engine
 	s3Bucket  string
 	s3Client  *minio.Client
+	session   sessions.Store
 	templates map[string]*template.Template
 
 	// UI
@@ -186,9 +189,15 @@ func (c *Container) Mail() mailgun.Mailgun {
 
 func (c *Container) Router() *gin.Engine {
 	if c.router == nil {
+		if viper.GetString("ENVIRONMENT") == "development" {
+			gin.SetMode(gin.DebugMode)
+		} else {
+			gin.SetMode(gin.ReleaseMode)
+		}
+
 		c.router = gin.Default()
 
-		// Load templates
+		c.router.Use(sessions.Sessions("ptc_sess", c.Session()))
 		c.router.LoadHTMLGlob("ui/template/error/*")
 	}
 
@@ -218,6 +227,26 @@ func (c *Container) S3Client() *minio.Client {
 	}
 
 	return c.s3Client
+}
+
+func (c *Container) Session() sessions.Store {
+	if c.session == nil {
+		c.session = cookie.NewStore([]byte(viper.GetString("AUTH_TOKEN")))
+
+		secure := true
+		if viper.GetString("ENVIRONMENT") == "development" {
+			secure = false
+		}
+		c.session.Options(sessions.Options{
+			Path:     "/",
+			Domain:   "",
+			MaxAge:   60 * 60, // 1 Hour
+			Secure:   secure,
+			HttpOnly: true,
+		})
+	}
+
+	return c.session
 }
 
 func (c *Container) Templates() map[string]*template.Template {

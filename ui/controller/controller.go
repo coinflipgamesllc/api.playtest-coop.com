@@ -1,6 +1,9 @@
 package controller
 
-import "github.com/gin-gonic/gin"
+import (
+	"github.com/gin-contrib/sessions"
+	"github.com/gin-gonic/gin"
+)
 
 // AckResponse simply acknowledges the request
 type AckResponse struct {
@@ -47,14 +50,15 @@ func unauthorizedResponse(c *gin.Context) {
 	c.AbortWithStatusJSON(401, UnauthorizedResponse{Error: "unauthorized"})
 }
 
-// userID helper function to extract the user's ID from the request context
+// userID helper function to extract the user's ID from the session
 func userID(c *gin.Context) uint {
-	// Retrieve the user ID from the context
-	id, ok := c.Get("user_id")
-	if !ok {
+	// Retrieve the user ID from the session
+	session := sessions.Default(c)
+	id := session.Get("user_id")
+	if id == nil {
 		unauthorizedResponse(c)
 		return 0
 	}
 
-	return uint(id.(float64))
+	return id.(uint)
 }
