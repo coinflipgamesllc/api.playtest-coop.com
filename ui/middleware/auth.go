@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
 	"github.com/gin-gonic/gin"
@@ -14,14 +15,14 @@ func Authenticated(authToken string) gin.HandlerFunc {
 		})
 
 		if err != nil {
-			c.AbortWithError(401, err)
+			c.AbortWithStatusJSON(401, gin.H{"error": domain.Unauthorized{}.Error()})
 			return
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			c.Set("user_id", claims["sub"])
 		} else {
-			c.AbortWithStatus(401)
+			c.AbortWithStatusJSON(401, gin.H{"error": domain.Unauthorized{}.Error()})
 		}
 	}
 }

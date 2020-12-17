@@ -1,7 +1,10 @@
 package controller
 
 import (
+	"errors"
+
 	"github.com/coinflipgamesllc/api.playtest-coop.com/app"
+	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
 	"github.com/gin-gonic/gin"
 )
 
@@ -59,12 +62,12 @@ func (t *AuthController) UpdateUser(c *gin.Context) {
 
 	user, err := t.AuthService.UpdateUser(&req, userID)
 	if err != nil {
-		serverErrorResponse(c, "failed to update user")
-		return
-	}
+		if errors.Is(err, domain.UserNotFound{}) {
+			notFoundResponse(c, err.Error())
+			return
+		}
 
-	if user == nil {
-		notFoundResponse(c, "user not found")
+		serverErrorResponse(c, "failed to update user")
 		return
 	}
 
@@ -117,7 +120,17 @@ func (t *AuthController) Login(c *gin.Context) {
 	// Attempt to log in
 	user, at, rt, err := t.AuthService.Login(req.Email, req.Password)
 	if err != nil {
-		requestErrorResponse(c, "failed to log in")
+		if errors.Is(err, domain.UserNotFound{}) {
+			notFoundResponse(c, err.Error())
+			return
+		}
+
+		if errors.Is(err, domain.CredentialsIncorrect{}) {
+			notFoundResponse(c, err.Error())
+			return
+		}
+
+		requestErrorResponse(c, err.Error())
 		return
 	}
 
@@ -144,6 +157,11 @@ func (t *AuthController) RefreshToken(c *gin.Context) {
 	// Validate token
 	at, rt, err := t.AuthService.RefreshToken(req.RefreshToken)
 	if err != nil {
+		if errors.Is(err, domain.UserNotFound{}) {
+			notFoundResponse(c, err.Error())
+			return
+		}
+
 		requestErrorResponse(c, "failed to refresh tokens")
 		return
 	}

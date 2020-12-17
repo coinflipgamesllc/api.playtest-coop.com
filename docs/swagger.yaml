@@ -292,12 +292,16 @@ definitions:
   game.Stats:
     properties:
       estimated_playtime:
+        example: 30
         type: integer
       max_players:
+        example: 5
         type: integer
       min_age:
+        example: 8
         type: integer
       min_players:
+        example: 1
         type: integer
     type: object
 host: api.playtest-coop.com

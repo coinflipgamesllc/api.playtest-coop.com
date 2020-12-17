@@ -1,7 +1,6 @@
 package app
 
 import (
-	"errors"
 	"time"
 
 	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
@@ -77,7 +76,7 @@ func (s *AuthService) generateTokensForUser(user *domain.User) (string, string, 
 
 	at, err := accessToken.SignedString([]byte(s.AuthToken))
 	if err != nil {
-		return "", "", err
+		return "", "", domain.GenericServerError{}
 	}
 
 	refreshToken := jwt.New(jwt.GetSigningMethod("HS256"))
@@ -88,7 +87,7 @@ func (s *AuthService) generateTokensForUser(user *domain.User) (string, string, 
 
 	rt, err := refreshToken.SignedString([]byte(s.AuthToken))
 	if err != nil {
-		return "", "", err
+		return "", "", domain.GenericServerError{}
 	}
 
 	return at, rt, nil
@@ -98,11 +97,11 @@ func (s *AuthService) generateTokensForUser(user *domain.User) (string, string, 
 func (s *AuthService) UpdateUser(req *UpdateUserRequest, userID uint) (*domain.User, error) {
 	user, err := s.FetchUser(userID)
 	if err != nil {
-		return nil, err
+		return nil, domain.GenericServerError{}
 	}
 
 	if user == nil {
-		return nil, nil
+		return nil, domain.UserNotFound{ProvidedID: userID}
 	}
 
 	// Update the user
@@ -117,8 +116,8 @@ func (s *AuthService) UpdateUser(req *UpdateUserRequest, userID uint) (*domain.U
 	if req.NewPassword != "" && req.OldPassword != "" {
 		err := user.ChangePassword(req.NewPassword, req.OldPassword)
 		if err != nil {
-			s.Logger.Error(err.Error(), "user", userID)
-			return nil, err
+			s.Logger.Error(err)
+			return nil, domain.GenericServerError{}
 		}
 	}
 
@@ -130,7 +129,7 @@ func (s *AuthService) UpdateUser(req *UpdateUserRequest, userID uint) (*domain.U
 	err = s.UserRepository.Save(user)
 	if err != nil {
 		s.Logger.Error(err.Error(), "user", userID)
-		return nil, err
+		return nil, domain.GenericServerError{}
 	}
 
 	return user, nil
@@ -141,21 +140,21 @@ func (s *AuthService) Signup(name, email, password string) (*domain.User, string
 	user, err := domain.NewUser(name, email, password)
 	if err != nil {
 		s.Logger.Error(err)
-		return nil, "", "", err
+		return nil, "", "", domain.GenericServerError{}
 	}
 
 	// Save
 	err = s.UserRepository.Save(user)
 	if err != nil {
 		s.Logger.Error(err)
-		return nil, "", "", err
+		return nil, "", "", domain.GenericServerError{}
 	}
 
 	// Generate tokens
 	at, rt, err := s.generateTokensForUser(user)
 	if err != nil {
 		s.Logger.Error(err)
-		return nil, "", "", err
+		return nil, "", "", domain.GenericServerError{}
 	}
 
 	return user, at, rt, nil
@@ -167,30 +166,29 @@ func (s *AuthService) Login(email, password string) (*domain.User, string, strin
 	user, err := s.UserRepository.UserOfEmail(email)
 	if err != nil {
 		s.Logger.Error(err)
-		return nil, "", "", err
+		return nil, "", "", domain.GenericServerError{}
 	}
 
 	if user == nil {
-		s.Logger.Error(err)
-		return nil, "", "", err
+		return nil, "", "", domain.UserNotFound{ProvidedEmail: email}
 	}
 
 	// Verify password
 	ok, err := user.ValidPassword(password)
 	if err != nil {
 		s.Logger.Error(err)
-		return nil, "", "", err
+		return nil, "", "", domain.GenericServerError{}
 	}
 
 	if !ok {
-		return nil, "", "", errors.New("email and password combination not found")
+		return nil, "", "", domain.CredentialsIncorrect{}
 	}
 
 	// Generate tokens for future requests
 	at, rt, err := s.generateTokensForUser(user)
 	if err != nil {
 		s.Logger.Error(err)
-		return nil, "", "", err
+		return nil, "", "", domain.GenericServerError{}
 	}
 
 	return user, at, rt, nil
@@ -210,16 +208,15 @@ func (s *AuthService) RefreshToken(refreshToken string) (string, string, error) 
 
 	// Extract and validate that the user account is still active
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		id := claims["sub"]
-
-		user, err := s.UserRepository.UserOfID(uint(id.(float64)))
+		userID := uint(claims["sub"].(float64))
+		user, err := s.UserRepository.UserOfID(userID)
 		if err != nil {
 			s.Logger.Error(err)
 			return "", "", err
 		}
 
 		if user == nil {
-			return "", "", err
+			return "", "", domain.UserNotFound{ProvidedID: userID}
 		}
 
 		// Generate a new token pair
@@ -232,7 +229,7 @@ func (s *AuthService) RefreshToken(refreshToken string) (string, string, error) 
 		return at, rt, nil
 	}
 
-	return "", "", errors.New("unauthorized")
+	return "", "", domain.Unauthorized{}
 }
 
 // VerifyEmail will check for a verify id in the database and mark the corresponding user's email as valid
@@ -241,18 +238,18 @@ func (s *AuthService) VerifyEmail(id string) error {
 	user, err := s.UserRepository.UserOfVerificationID(id)
 	if err != nil {
 		s.Logger.Error(err)
-		return err
+		return domain.GenericServerError{}
 	}
 
 	if user == nil {
-		return nil
+		return domain.UserNotFound{}
 	}
 
 	// Mark verified and save
 	user.VerifyEmail()
 	if err := s.UserRepository.Save(user); err != nil {
 		s.Logger.Error(err)
-		return err
+		return domain.GenericServerError{}
 	}
 
 	return nil

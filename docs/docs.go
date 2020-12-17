@@ -1017,16 +1017,20 @@ var doc = `{
             "type": "object",
             "properties": {
                 "estimated_playtime": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 30
                 },
                 "max_players": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 5
                 },
                 "min_age": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 8
                 },
                 "min_players": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 }
             }
         }
