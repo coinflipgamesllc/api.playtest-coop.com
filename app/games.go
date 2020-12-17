@@ -12,7 +12,7 @@ type (
 	GameService struct {
 		GameRepository domain.GameRepository
 		UserRepository domain.UserRepository
-		Logger         *zap.SugaredLogger
+		Logger         *zap.Logger
 	}
 
 	// Request DTOs
@@ -95,7 +95,7 @@ func (s *GameService) ListGames(req *ListGamesRequest) ([]domain.Game, int, erro
 	)
 
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return nil, 0, err
 	}
 
@@ -106,7 +106,7 @@ func (s *GameService) ListGames(req *ListGamesRequest) ([]domain.Game, int, erro
 func (s *GameService) CreateGame(req *CreateGameRequest, userID uint) (*domain.Game, error) {
 	user, err := s.UserRepository.UserOfID(userID)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -125,7 +125,7 @@ func (s *GameService) CreateGame(req *CreateGameRequest, userID uint) (*domain.G
 
 			designer, err := s.UserRepository.UserOfID(designerID)
 			if err != nil {
-				s.Logger.Error(err)
+				s.Logger.Error(err.Error())
 				return nil, err
 			}
 
@@ -140,7 +140,7 @@ func (s *GameService) CreateGame(req *CreateGameRequest, userID uint) (*domain.G
 	// And save
 	err = s.GameRepository.Save(game)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -151,7 +151,7 @@ func (s *GameService) CreateGame(req *CreateGameRequest, userID uint) (*domain.G
 func (s *GameService) GetGame(gameID uint) (*domain.Game, error) {
 	game, err := s.GameRepository.GameOfID(gameID)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -162,7 +162,7 @@ func (s *GameService) GetGame(gameID uint) (*domain.Game, error) {
 func (s *GameService) UpdateGame(gameID uint, req *UpdateGameRequest, userID uint) (*domain.Game, error) {
 	game, err := s.GameRepository.GameOfID(gameID)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -173,7 +173,7 @@ func (s *GameService) UpdateGame(gameID uint, req *UpdateGameRequest, userID uin
 	// Ensure that our current user is allowed to edit the game
 	user, err := s.UserRepository.UserOfID(userID)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -193,7 +193,7 @@ func (s *GameService) UpdateGame(gameID uint, req *UpdateGameRequest, userID uin
 	if req.Status != "" {
 		err := game.UpdateStatus(req.Status)
 		if err != nil {
-			s.Logger.Error(err)
+			s.Logger.Error(err.Error())
 			return nil, err
 		}
 	}
@@ -203,7 +203,7 @@ func (s *GameService) UpdateGame(gameID uint, req *UpdateGameRequest, userID uin
 		for _, designerID := range req.Designers {
 			designer, err := s.UserRepository.UserOfID(designerID)
 			if err != nil {
-				s.Logger.Error(err)
+				s.Logger.Error(err.Error())
 				return nil, err
 			}
 
@@ -220,7 +220,7 @@ func (s *GameService) UpdateGame(gameID uint, req *UpdateGameRequest, userID uin
 	// And save
 	err = s.GameRepository.Save(game)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return nil, err
 	}
 

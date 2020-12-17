@@ -9,7 +9,7 @@ type (
 	// AuthService handles both authentication and authorization
 	AuthService struct {
 		AuthToken      string
-		Logger         *zap.SugaredLogger
+		Logger         *zap.Logger
 		UserRepository domain.UserRepository
 	}
 
@@ -73,7 +73,7 @@ func (s *AuthService) UpdateUser(req *UpdateUserRequest, userID uint) (*domain.U
 	if req.NewPassword != "" && req.OldPassword != "" {
 		err := user.ChangePassword(req.NewPassword, req.OldPassword)
 		if err != nil {
-			s.Logger.Error(err)
+			s.Logger.Error(err.Error())
 			return nil, domain.GenericServerError{}
 		}
 	}
@@ -85,7 +85,7 @@ func (s *AuthService) UpdateUser(req *UpdateUserRequest, userID uint) (*domain.U
 	// Save changes
 	err = s.UserRepository.Save(user)
 	if err != nil {
-		s.Logger.Error(err.Error(), "user", userID)
+		s.Logger.Error(err.Error())
 		return nil, domain.GenericServerError{}
 	}
 
@@ -97,7 +97,7 @@ func (s *AuthService) RequestResetPassword(email string) error {
 	// Retrieve user
 	user, err := s.UserRepository.UserOfEmail(email)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return domain.GenericServerError{}
 	}
 
@@ -109,7 +109,7 @@ func (s *AuthService) RequestResetPassword(email string) error {
 	user.RequestResetPassword()
 	err = s.UserRepository.Save(user)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return domain.GenericServerError{}
 	}
 
@@ -121,7 +121,7 @@ func (s *AuthService) ResetPassword(otp string) error {
 	// Retrieve user
 	user, err := s.UserRepository.UserOfOneTimePassword(otp)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return domain.GenericServerError{}
 	}
 
@@ -132,13 +132,13 @@ func (s *AuthService) ResetPassword(otp string) error {
 	// Actually reset password & save
 	err = user.ResetPassword(otp)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return domain.GenericServerError{}
 	}
 
 	err = s.UserRepository.Save(user)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return domain.GenericServerError{}
 	}
 
@@ -149,14 +149,14 @@ func (s *AuthService) ResetPassword(otp string) error {
 func (s *AuthService) Signup(name, email, password string) (*domain.User, error) {
 	user, err := domain.NewUser(name, email, password)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return nil, domain.GenericServerError{}
 	}
 
 	// Save
 	err = s.UserRepository.Save(user)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return nil, domain.GenericServerError{}
 	}
 
@@ -168,7 +168,7 @@ func (s *AuthService) Login(email, password string) (*domain.User, error) {
 	// Retrieve user
 	user, err := s.UserRepository.UserOfEmail(email)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return nil, domain.GenericServerError{}
 	}
 
@@ -179,7 +179,7 @@ func (s *AuthService) Login(email, password string) (*domain.User, error) {
 	// Verify password
 	ok, err := user.ValidPassword(password)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return nil, domain.GenericServerError{}
 	}
 
@@ -195,7 +195,7 @@ func (s *AuthService) VerifyEmail(id string) error {
 	// Fetch user by ID
 	user, err := s.UserRepository.UserOfVerificationID(id)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return domain.GenericServerError{}
 	}
 
@@ -206,7 +206,7 @@ func (s *AuthService) VerifyEmail(id string) error {
 	// Mark verified and save
 	user.VerifyEmail()
 	if err := s.UserRepository.Save(user); err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return domain.GenericServerError{}
 	}
 

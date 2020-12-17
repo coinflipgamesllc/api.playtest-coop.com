@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"time"
 
 	"github.com/coinflipgamesllc/api.playtest-coop.com/app"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
@@ -13,6 +14,7 @@ import (
 	"github.com/coinflipgamesllc/api.playtest-coop.com/ui/middleware"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
+	"github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/mailgun/mailgun-go/v4"
 	"github.com/minio/minio-go/v7"
@@ -38,7 +40,7 @@ type Container struct {
 
 	// Infrastructure
 	db        *gorm.DB
-	logger    *zap.SugaredLogger
+	logger    *zap.Logger
 	mail      mailgun.Mailgun
 	router    *gin.Engine
 	s3Bucket  string
@@ -168,9 +170,20 @@ func (c *Container) DB() *gorm.DB {
 	return c.db
 }
 
-func (c *Container) Logger() *zap.SugaredLogger {
+func (c *Container) Logger() *zap.Logger {
 	if c.logger == nil {
-		c.logger = zap.S()
+		var logger *zap.Logger
+		var err error
+		if viper.GetString("ENVIRONMENT") == "development" {
+			logger, err = zap.NewDevelopment()
+		} else {
+			logger, err = zap.NewProduction()
+		}
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		c.logger = logger
 	}
 
 	return c.logger
@@ -195,9 +208,11 @@ func (c *Container) Router() *gin.Engine {
 			gin.SetMode(gin.ReleaseMode)
 		}
 
-		c.router = gin.Default()
+		c.router = gin.New()
 
 		c.router.Use(sessions.Sessions("ptc_sess", c.Session()))
+		c.router.Use(ginzap.Ginzap(c.Logger(), time.RFC3339, true))
+		c.router.Use(ginzap.RecoveryWithZap(c.Logger(), true))
 		c.router.LoadHTMLGlob("ui/template/error/*")
 	}
 

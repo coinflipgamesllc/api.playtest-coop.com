@@ -17,7 +17,7 @@ type (
 		FileRepository domain.FileRepository
 		GameRepository domain.GameRepository
 		UserRepository domain.UserRepository
-		Logger         *zap.SugaredLogger
+		Logger         *zap.Logger
 		S3Bucket       string
 		S3Client       *minio.Client
 	}
@@ -73,7 +73,7 @@ func (s *FileService) PresignUpload(name, extension string) (string, error) {
 func (s *FileService) CreateFile(req *CreateFileRequest, userID uint) (*domain.File, error) {
 	user, err := s.UserRepository.UserOfID(userID)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -91,7 +91,7 @@ func (s *FileService) CreateFile(req *CreateFileRequest, userID uint) (*domain.F
 	}
 
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -100,12 +100,12 @@ func (s *FileService) CreateFile(req *CreateFileRequest, userID uint) (*domain.F
 		// Make sure the user is allowed to edit this game
 		game, err := s.GameRepository.GameOfID(req.GameID)
 		if err != nil || game == nil {
-			s.Logger.Error(err)
+			s.Logger.Error(err.Error())
 			return nil, err
 		}
 
 		if !game.MayBeUpdatedBy(user) {
-			s.Logger.Error(err)
+			s.Logger.Error(err.Error())
 			return nil, err
 		}
 
@@ -115,7 +115,7 @@ func (s *FileService) CreateFile(req *CreateFileRequest, userID uint) (*domain.F
 	// Save
 	err = s.FileRepository.Save(file)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -126,7 +126,7 @@ func (s *FileService) CreateFile(req *CreateFileRequest, userID uint) (*domain.F
 func (s *FileService) ListUserFiles(userID uint) ([]domain.File, error) {
 	files, err := s.FileRepository.FilesOfUser(userID)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return nil, err
 	}
 
@@ -137,7 +137,7 @@ func (s *FileService) ListUserFiles(userID uint) ([]domain.File, error) {
 func (s *FileService) DeleteFile(fileID, userID uint) error {
 	file, err := s.FileRepository.FileOfID(fileID)
 	if err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return err
 	}
 
@@ -152,7 +152,7 @@ func (s *FileService) DeleteFile(fileID, userID uint) error {
 
 	// And delete
 	if err := s.FileRepository.Delete(file); err != nil {
-		s.Logger.Error(err)
+		s.Logger.Error(err.Error())
 		return err
 	}
 

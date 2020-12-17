@@ -49,6 +49,10 @@ func RegisterRoutes(container *infrastructure.Container) {
 	}
 
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+
+	router.Any("/ping", func(c *gin.Context) {
+		c.JSON(200, gin.H{"message": "pong"})
+	})
 }
 
 func serverError(err error) gin.H {
