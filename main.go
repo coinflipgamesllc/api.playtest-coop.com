@@ -1,9 +1,10 @@
 package main
 
 import (
+	"os"
+
 	"github.com/coinflipgamesllc/api.playtest-coop.com/infrastructure"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/ui"
-	"github.com/spf13/viper"
 )
 
 // @title Playtest Co-op API
@@ -27,5 +28,5 @@ func main() {
 	}()
 
 	router := container.Router()
-	router.Run(":" + viper.GetString("PORT"))
+	router.Run(":" + os.Getenv("PORT"))
 }

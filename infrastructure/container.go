@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"os"
 	"time"
 
 	"github.com/coinflipgamesllc/api.playtest-coop.com/app"
@@ -19,7 +20,6 @@ import (
 	"github.com/mailgun/mailgun-go/v4"
 	"github.com/minio/minio-go/v7"
 	"github.com/minio/minio-go/v7/pkg/credentials"
-	"github.com/spf13/viper"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -43,7 +43,6 @@ type Container struct {
 	logger    *zap.Logger
 	mail      mailgun.Mailgun
 	router    *gin.Engine
-	s3Bucket  string
 	s3Client  *minio.Client
 	session   sessions.Store
 	templates map[string]*template.Template
@@ -62,7 +61,7 @@ type Container struct {
 func (c *Container) AuthService() *app.AuthService {
 	if c.authService == nil {
 		c.authService = &app.AuthService{
-			AuthToken:      viper.GetString("AUTH_TOKEN"),
+			AuthToken:      os.Getenv("AUTH_TOKEN"),
 			Logger:         c.Logger(),
 			UserRepository: c.UserRepository(),
 		}
@@ -71,6 +70,7 @@ func (c *Container) AuthService() *app.AuthService {
 	return c.authService
 }
 
+// FileService for handling file uploads/downloads/etc
 func (c *Container) FileService() *app.FileService {
 	if c.fileService == nil {
 		c.fileService = &app.FileService{
@@ -78,7 +78,7 @@ func (c *Container) FileService() *app.FileService {
 			GameRepository: c.GameRepository(),
 			UserRepository: c.UserRepository(),
 			Logger:         c.Logger(),
-			S3Bucket:       c.S3Bucket(),
+			S3Bucket:       os.Getenv("S3_BUCKET"),
 			S3Client:       c.S3Client(),
 		}
 	}
@@ -86,6 +86,7 @@ func (c *Container) FileService() *app.FileService {
 	return c.fileService
 }
 
+// GameService for general game content interaction
 func (c *Container) GameService() *app.GameService {
 	if c.gameService == nil {
 		c.gameService = &app.GameService{
@@ -98,11 +99,12 @@ func (c *Container) GameService() *app.GameService {
 	return c.gameService
 }
 
+// MailService handles emailing users
 func (c *Container) MailService() *app.MailService {
 	if c.mailService == nil {
 		c.mailService = &app.MailService{
-			FromAddress: viper.GetString("FROM_ADDRESS"),
-			Hostname:    viper.GetString("HOSTNAME"),
+			FromAddress: os.Getenv("FROM_ADDRESS"),
+			Hostname:    os.Getenv("HOSTNAME"),
 			MailClient:  c.Mail(),
 			Templates:   c.Templates(),
 		}
@@ -111,6 +113,7 @@ func (c *Container) MailService() *app.MailService {
 	return c.mailService
 }
 
+// FileRepository implementation for database
 func (c *Container) FileRepository() domain.FileRepository {
 	if c.fileRepository == nil {
 		c.fileRepository = &persistence.FileRepository{
@@ -121,6 +124,7 @@ func (c *Container) FileRepository() domain.FileRepository {
 	return c.fileRepository
 }
 
+// GameRepository implementation for database
 func (c *Container) GameRepository() domain.GameRepository {
 	if c.gameRepository == nil {
 		c.gameRepository = &persistence.GameRepository{
@@ -131,6 +135,7 @@ func (c *Container) GameRepository() domain.GameRepository {
 	return c.gameRepository
 }
 
+// UserRepository implementation for database
 func (c *Container) UserRepository() domain.UserRepository {
 	if c.userRepository == nil {
 		c.userRepository = &persistence.UserRepository{
@@ -141,16 +146,17 @@ func (c *Container) UserRepository() domain.UserRepository {
 	return c.userRepository
 }
 
+// DB adapter for postgresql
 func (c *Container) DB() *gorm.DB {
 	if c.db == nil {
 		dsn := fmt.Sprintf(
 			"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
-			viper.GetString("DB_HOSTNAME"),
-			viper.GetString("DB_USERNAME"),
-			viper.GetString("DB_PASSWORD"),
-			viper.GetString("DB_DATABASE"),
-			viper.GetString("DB_PORT"),
-			viper.GetString("DB_SSLMODE"),
+			os.Getenv("DB_HOSTNAME"),
+			os.Getenv("DB_USERNAME"),
+			os.Getenv("DB_PASSWORD"),
+			os.Getenv("DB_DATABASE"),
+			os.Getenv("DB_PORT"),
+			os.Getenv("DB_SSLMODE"),
 		)
 
 		db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -170,11 +176,12 @@ func (c *Container) DB() *gorm.DB {
 	return c.db
 }
 
+// Logger for consistent logging, application-wide
 func (c *Container) Logger() *zap.Logger {
 	if c.logger == nil {
 		var logger *zap.Logger
 		var err error
-		if viper.GetString("ENVIRONMENT") == "development" {
+		if os.Getenv("ENVIRONMENT") == "development" {
 			logger, err = zap.NewDevelopment()
 		} else {
 			logger, err = zap.NewProduction()
@@ -189,20 +196,22 @@ func (c *Container) Logger() *zap.Logger {
 	return c.logger
 }
 
+// Mail client for mailgun
 func (c *Container) Mail() mailgun.Mailgun {
 	if c.mail == nil {
 		c.mail = mailgun.NewMailgun(
-			viper.GetString("MAILGUN_DOMAIN"),
-			viper.GetString("MAILGUN_APIKEY"),
+			os.Getenv("MAILGUN_DOMAIN"),
+			os.Getenv("MAILGUN_APIKEY"),
 		)
 	}
 
 	return c.mail
 }
 
+// Router sets up the gin router
 func (c *Container) Router() *gin.Engine {
 	if c.router == nil {
-		if viper.GetString("ENVIRONMENT") == "development" {
+		if os.Getenv("ENVIRONMENT") == "development" {
 			gin.SetMode(gin.DebugMode)
 		} else {
 			gin.SetMode(gin.ReleaseMode)
@@ -219,18 +228,11 @@ func (c *Container) Router() *gin.Engine {
 	return c.router
 }
 
-func (c *Container) S3Bucket() string {
-	if c.s3Bucket == "" {
-		c.s3Bucket = viper.GetString("S3_BUCKET")
-	}
-
-	return c.s3Bucket
-}
-
+// S3Client for talking to s3-compatible storage
 func (c *Container) S3Client() *minio.Client {
 	if c.s3Client == nil {
-		s3, err := minio.New(viper.GetString("S3_ENDPOINT"), &minio.Options{
-			Creds:  credentials.NewStaticV4(viper.GetString("AWS_ACCESS_KEY"), viper.GetString("AWS_ACCESS_SECRET"), ""),
+		s3, err := minio.New(os.Getenv("S3_ENDPOINT"), &minio.Options{
+			Creds:  credentials.NewStaticV4(os.Getenv("AWS_ACCESS_KEY"), os.Getenv("AWS_ACCESS_SECRET"), ""),
 			Secure: true,
 		})
 
@@ -244,12 +246,13 @@ func (c *Container) S3Client() *minio.Client {
 	return c.s3Client
 }
 
+// Session storage
 func (c *Container) Session() sessions.Store {
 	if c.session == nil {
-		c.session = cookie.NewStore([]byte(viper.GetString("AUTH_TOKEN")))
+		c.session = cookie.NewStore([]byte(os.Getenv("AUTH_TOKEN")))
 
 		secure := true
-		if viper.GetString("ENVIRONMENT") == "development" {
+		if os.Getenv("ENVIRONMENT") == "development" {
 			secure = false
 		}
 		c.session.Options(sessions.Options{
@@ -264,6 +267,7 @@ func (c *Container) Session() sessions.Store {
 	return c.session
 }
 
+// Templates initializes all the templates used by the MailService
 func (c *Container) Templates() map[string]*template.Template {
 	if c.templates == nil {
 		t := map[string]*template.Template{}
@@ -300,6 +304,7 @@ func (c *Container) AuthController() *controller.AuthController {
 	return c.authController
 }
 
+// FileController for handling /files routes
 func (c *Container) FileController() *controller.FileController {
 	if c.fileController == nil {
 		c.fileController = &controller.FileController{
@@ -310,6 +315,7 @@ func (c *Container) FileController() *controller.FileController {
 	return c.fileController
 }
 
+// GameController for handling /games routes
 func (c *Container) GameController() *controller.GameController {
 	if c.gameController == nil {
 		c.gameController = &controller.GameController{
@@ -323,12 +329,13 @@ func (c *Container) GameController() *controller.GameController {
 // Authenticated middleware for ensuring that an HTTP request includes a valid access token
 func (c *Container) Authenticated() gin.HandlerFunc {
 	if c.authenticated == nil {
-		c.authenticated = middleware.Authenticated(viper.GetString("AUTH_TOKEN"))
+		c.authenticated = middleware.Authenticated(os.Getenv("AUTH_TOKEN"))
 	}
 
 	return c.authenticated
 }
 
+// EventHandler for handling domain events subscribers
 func (c *Container) EventHandler() *events.EventHandler {
 	if c.eventHandler == nil {
 		c.eventHandler = &events.EventHandler{
