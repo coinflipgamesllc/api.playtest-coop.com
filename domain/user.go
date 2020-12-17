@@ -25,6 +25,7 @@ type UserRepository interface {
 	UserOfID(uint) (*User, error)
 	UserOfEmail(string) (*User, error)
 	UserOfVerificationID(string) (*User, error)
+	UserOfOneTimePassword(string) (*User, error)
 	Save(*User) error
 }
 
@@ -48,6 +49,17 @@ func userEmailUnverified(u *User) Event {
 			"name":           u.Name,
 			"email":          u.Account.Email,
 			"verificationID": u.Account.VerificationID,
+		},
+	}
+}
+
+func passwordResetRequested(u *User) Event {
+	return Event{
+		Name: "User/PasswordResetRequested",
+		Data: map[string]interface{}{
+			"name":  u.Name,
+			"email": u.Account.Email,
+			"otp":   u.Account.OneTimePassword,
 		},
 	}
 }
@@ -101,6 +113,32 @@ func (u *User) ChangePassword(newPassword, oldPassword string) error {
 	}
 
 	account, err := user.NewAccount(u.Account.Email, newPassword)
+	if err != nil {
+		return err
+	}
+
+	u.Account = *account
+	u.Account.Verified = true // We don't need to revalidate email
+
+	return nil
+}
+
+// RequestResetPassword will generate a one-time-password and email it to user.
+// Call ResetPassword to actually reset it.
+func (u *User) RequestResetPassword() {
+	u.Account.AddOneTimePassword()
+
+	event := passwordResetRequested(u)
+	pubsub.Instance.Publish(event.Name, event.Data)
+}
+
+// ResetPassword uses the one-time-use password to replace the user's password
+func (u *User) ResetPassword(otp string) error {
+	if u.Account.OneTimePassword != otp {
+		return OneTimePasswordIncorrect{}
+	}
+
+	account, err := user.NewAccount(u.Account.Email, otp)
 	if err != nil {
 		return err
 	}

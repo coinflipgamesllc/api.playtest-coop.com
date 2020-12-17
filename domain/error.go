@@ -33,6 +33,13 @@ func (e CredentialsIncorrect) Error() string {
 	return "email and password combination not found"
 }
 
+// OneTimePasswordIncorrect error
+type OneTimePasswordIncorrect struct{}
+
+func (e OneTimePasswordIncorrect) Error() string {
+	return "one-time-use password expired or invalid"
+}
+
 // Unauthorized error
 type Unauthorized struct{}
 

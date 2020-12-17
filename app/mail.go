@@ -55,6 +55,25 @@ func (s *MailService) SendVerifyEmail(email, name, verificationID string) error 
 	return s.send(email, "Verify your email", buf.String())
 }
 
+// SendPasswordResetEmail sends an email with an included one-time-password for users to use to set their password again
+func (s *MailService) SendPasswordResetEmail(email, name, otp string) error {
+	templateData := struct {
+		Name string
+		URL  string
+	}{
+		Name: name,
+		URL:  s.Hostname + "/v1/auth/reset-password/" + otp,
+	}
+
+	tpl := s.Templates["email/reset-password"]
+	buf := new(bytes.Buffer)
+	if err := tpl.Execute(buf, templateData); err != nil {
+		return err
+	}
+
+	return s.send(email, "Password reset requested", buf.String())
+}
+
 func (s *MailService) send(toAddress, subject, body string) error {
 	message := s.MailClient.NewMessage(
 		s.FromAddress,

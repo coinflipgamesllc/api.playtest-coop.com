@@ -56,6 +56,21 @@ func (r *UserRepository) UserOfVerificationID(verificationID string) (*domain.Us
 	return user, nil
 }
 
+func (r *UserRepository) UserOfOneTimePassword(otp string) (*domain.User, error) {
+	user := &domain.User{}
+	result := r.DB.First(user, "one_time_password = ?", otp)
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+
+		return nil, result.Error
+	}
+
+	return user, nil
+}
+
 // Save will upsert a user record
 func (r *UserRepository) Save(user *domain.User) error {
 	var result *gorm.DB

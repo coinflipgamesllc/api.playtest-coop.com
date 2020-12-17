@@ -45,6 +45,11 @@ type (
 		RefreshToken string `json:"refresh_token" binding:"required" example:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDgxNDA1MTcsInN1YiI6MX0.D5kR_AxkqIN6xCxvP07ZUIfYxbfdTrXAe7J03nGvkPw"`
 	}
 
+	// ResetPasswordRequest params for requesting a password reset
+	ResetPasswordRequest struct {
+		Email string `json:"email" binding:"required,email" example:"user@example.com"`
+	}
+
 	// Response DTOs
 
 	// UserResponse wraps User object
@@ -133,6 +138,59 @@ func (s *AuthService) UpdateUser(req *UpdateUserRequest, userID uint) (*domain.U
 	}
 
 	return user, nil
+}
+
+// RequestResetPassword will send a password reset email to the specified user
+func (s *AuthService) RequestResetPassword(email string) error {
+	// Retrieve user
+	user, err := s.UserRepository.UserOfEmail(email)
+	if err != nil {
+		s.Logger.Error(err)
+		return domain.GenericServerError{}
+	}
+
+	if user == nil {
+		return domain.UserNotFound{ProvidedEmail: email}
+	}
+
+	// Request reset password & save
+	user.RequestResetPassword()
+	err = s.UserRepository.Save(user)
+	if err != nil {
+		s.Logger.Error(err)
+		return domain.GenericServerError{}
+	}
+
+	return nil
+}
+
+// ResetPassword actually resets the user's password
+func (s *AuthService) ResetPassword(otp string) error {
+	// Retrieve user
+	user, err := s.UserRepository.UserOfOneTimePassword(otp)
+	if err != nil {
+		s.Logger.Error(err)
+		return domain.GenericServerError{}
+	}
+
+	if user == nil {
+		return domain.UserNotFound{}
+	}
+
+	// Actually reset password & save
+	err = user.ResetPassword(otp)
+	if err != nil {
+		s.Logger.Error(err)
+		return domain.GenericServerError{}
+	}
+
+	err = s.UserRepository.Save(user)
+	if err != nil {
+		s.Logger.Error(err)
+		return domain.GenericServerError{}
+	}
+
+	return nil
 }
 
 // Signup will create a new account

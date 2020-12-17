@@ -226,10 +226,9 @@ func (c *Container) Templates() map[string]*template.Template {
 
 		basePath := "ui/template/"
 		paths := []string{
+			"email/reset-password",
 			"email/verify-email",
 			"email/welcome",
-			"error/404",
-			"error/500",
 		}
 		for _, p := range paths {
 			tpl, err := template.ParseFiles(basePath + p + ".html")

@@ -1,6 +1,9 @@
 package user
 
-import "testing"
+import (
+	"math/rand"
+	"testing"
+)
 
 func TestPasswordHashing(t *testing.T) {
 	password := "starting_password"
@@ -34,5 +37,17 @@ func TestVerifyEmail(t *testing.T) {
 
 	if account.Verified != true || account.VerificationID != "" {
 		t.Error("Verification should clear the verification ID and set the account to verified")
+	}
+}
+
+func TestAddOneTimePassword(t *testing.T) {
+	rand.Seed(42)
+	a := Account{}
+	a.AddOneTimePassword()
+
+	expected := "HRukpTTueZPtNeuvunhuksqVGzAdxlgghEjkMVeZJpmKqakmTRgKfBSWYjUNGkdm"
+	actual := a.OneTimePassword
+	if expected != actual {
+		t.Errorf("Password reset should generate random OTP matching '%s', got '%s'", expected, actual)
 	}
 }

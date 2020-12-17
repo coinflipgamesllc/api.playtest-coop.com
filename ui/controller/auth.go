@@ -74,6 +74,32 @@ func (t *AuthController) UpdateUser(c *gin.Context) {
 	c.JSON(200, app.UserResponse{User: user})
 }
 
+// RequestResetPassword sends a password reset email to the specified email
+// @Summary Send a password reset email to the specified email
+// @Accept json
+// @Produce json
+// @Param email body app.ResetPasswordRequest true "User email to request a password reset for"
+// @Success 200 {object} AckResponse
+// @Failure 400 {object} RequestErrorResponse
+// @Tags auth
+// @Router /auth/reset-password [post]
+func (t *AuthController) RequestResetPassword(c *gin.Context) {
+	// Validate request
+	var req app.ResetPasswordRequest
+	if err := c.ShouldBind(&req); err != nil {
+		requestErrorResponse(c, err.Error())
+		return
+	}
+
+	err := t.AuthService.RequestResetPassword(req.Email)
+	if err != nil {
+		requestErrorResponse(c, err.Error())
+		return
+	}
+
+	ackResponse(c)
+}
+
 // Signup creates and authenticates a new user
 // @Summary Create and authenticates a new user
 // @Accept json
@@ -169,6 +195,8 @@ func (t *AuthController) RefreshToken(c *gin.Context) {
 	c.JSON(200, app.TokenResponse{AccessToken: at, RefreshToken: rt})
 }
 
+// Non-API routes
+
 // VerifyEmail verifies that a user's email address is valid. A link is sent to their email and clicking it takes them here.
 // this route isn't technically part of the API and does not serve JSON like the other routes.
 func (t *AuthController) VerifyEmail(c *gin.Context) {
@@ -182,4 +210,20 @@ func (t *AuthController) VerifyEmail(c *gin.Context) {
 
 	// Send em home
 	c.Redirect(307, "https://playtest-coop.com")
+}
+
+// ResetPassword confirms a reset password request and redirects the user to a
+// page to set their actual password.
+func (t *AuthController) ResetPassword(c *gin.Context) {
+	// Pull otp by ID
+	otp := c.Param("otp")
+
+	err := t.AuthService.ResetPassword(otp)
+	if err != nil {
+		c.HTML(500, "500.html", gin.H{"error": "Invalid password reset link (maybe it was already used?)"})
+		return
+	}
+
+	// Make em set a real password
+	c.Redirect(307, "https://playtest-coop.com/set-password?p="+otp)
 }

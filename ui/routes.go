@@ -20,6 +20,8 @@ func RegisterRoutes(container *infrastructure.Container) {
 		{
 			auth.GET("/user", container.Authenticated(), authController.GetUser)
 			auth.PUT("/user", container.Authenticated(), authController.UpdateUser)
+			auth.POST("/reset-password", authController.RequestResetPassword)
+			auth.GET("/reset-password/:otp", authController.ResetPassword)
 
 			auth.POST("/signup", authController.Signup)
 			auth.POST("/login", authController.Login)

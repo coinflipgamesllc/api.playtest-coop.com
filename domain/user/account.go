@@ -13,10 +13,13 @@ import (
 
 // Account tracks a user's authentication credentials
 type Account struct {
-	Email          string `json:"email" gorm:"unique"`
-	Password       string `json:"-"`
+	Email    string `json:"email" gorm:"unique"`
+	Password string `json:"-"`
+
 	Verified       bool   `json:"-"`
 	VerificationID string `json:"-"`
+
+	OneTimePassword string `json:"-"`
 }
 
 // NewAccount creates a new account with the provided email/password.
@@ -38,6 +41,11 @@ func NewAccount(email, password string) (*Account, error) {
 // ValidPassword returns true if the provided password matches the account password
 func (a *Account) ValidPassword(password string) (bool, error) {
 	return compare(password, a.Password)
+}
+
+// AddOneTimePassword generates a random one-time-use password for the user & emails it to them
+func (a *Account) AddOneTimePassword() {
+	a.OneTimePassword = generateOneTimePassword()
 }
 
 // VerifyEmail marks the email as verified and removes the corresponding ID
@@ -103,4 +111,14 @@ func compare(providedPassword, hashedPassword string) (bool, error) {
 	comparisonHash := argon2.IDKey([]byte(providedPassword), salt, lc.time, lc.memory, lc.threads, lc.size)
 
 	return (subtle.ConstantTimeCompare(decodedHash, comparisonHash) == 1), nil
+}
+
+func generateOneTimePassword() string {
+	const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	b := make([]byte, 64)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+
+	return string(b)
 }
