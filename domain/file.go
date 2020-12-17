@@ -1,10 +1,9 @@
 package domain
 
 import (
-	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"fmt"
+	"math/rand"
 	"strings"
 	"time"
 
@@ -54,16 +53,17 @@ func (f *File) AfterFind(tx *gorm.DB) (err error) {
 func NewImage(uploader User, filename, bucket, object string, size int64) (*File, error) {
 	extension := file.ExtractExtension(filename)
 	if !file.Images.Contains(extension) {
-		return nil, fmt.Errorf("file type '%s' not allowed", extension)
+		return nil, file.InvalidExtension{ProvidedValue: extension}
 	}
 
 	file := &File{
-		UploadedBy: uploader,
-		Role:       file.Image,
-		Filename:   filename,
-		Bucket:     bucket,
-		Object:     object,
-		Size:       size,
+		UploadedBy:   uploader,
+		UploadedByID: uploader.ID,
+		Role:         file.Image,
+		Filename:     filename,
+		Bucket:       bucket,
+		Object:       object,
+		Size:         size,
 	}
 	file.decorateURL()
 
@@ -74,16 +74,17 @@ func NewImage(uploader User, filename, bucket, object string, size int64) (*File
 func NewSellSheet(uploader User, filename, bucket, object string, size int64) (*File, error) {
 	extension := file.ExtractExtension(filename)
 	if !file.Documents.Contains(extension) {
-		return nil, fmt.Errorf("file type '%s' not allowed", extension)
+		return nil, file.InvalidExtension{ProvidedValue: extension}
 	}
 
 	file := &File{
-		UploadedBy: uploader,
-		Role:       file.SellSheet,
-		Filename:   filename,
-		Bucket:     bucket,
-		Object:     object,
-		Size:       size,
+		UploadedBy:   uploader,
+		UploadedByID: uploader.ID,
+		Role:         file.SellSheet,
+		Filename:     filename,
+		Bucket:       bucket,
+		Object:       object,
+		Size:         size,
 	}
 	file.decorateURL()
 
@@ -94,16 +95,17 @@ func NewSellSheet(uploader User, filename, bucket, object string, size int64) (*
 func NewPrintAndPlay(uploader User, filename, bucket, object string, size int64) (*File, error) {
 	extension := file.ExtractExtension(filename)
 	if !file.Documents.Contains(extension) {
-		return nil, fmt.Errorf("file type '%s' not allowed", extension)
+		return nil, file.InvalidExtension{ProvidedValue: extension}
 	}
 
 	file := &File{
-		UploadedBy: uploader,
-		Role:       file.PrintAndPlay,
-		Filename:   filename,
-		Bucket:     bucket,
-		Object:     object,
-		Size:       size,
+		UploadedBy:   uploader,
+		UploadedByID: uploader.ID,
+		Role:         file.PrintAndPlay,
+		Filename:     filename,
+		Bucket:       bucket,
+		Object:       object,
+		Size:         size,
 	}
 	file.decorateURL()
 

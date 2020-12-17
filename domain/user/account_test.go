@@ -27,3 +27,12 @@ func TestPasswordHashing(t *testing.T) {
 		t.Error("Passwords should not produce the same hash and not be equal.")
 	}
 }
+
+func TestVerifyEmail(t *testing.T) {
+	account := Account{Verified: false, VerificationID: "Not Verified"}
+	account.VerifyEmail()
+
+	if account.Verified != true || account.VerificationID != "" {
+		t.Error("Verification should clear the verification ID and set the account to verified")
+	}
+}

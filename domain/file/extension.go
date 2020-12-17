@@ -1,6 +1,9 @@
 package file
 
-import "strings"
+import (
+	"fmt"
+	"strings"
+)
 
 // Extension indicates the file type
 type Extension string
@@ -36,3 +39,12 @@ var (
 	// Documents extensions we allow
 	Documents = Extensions{"pdf"}
 )
+
+// InvalidExtension error for mismatched extensions
+type InvalidExtension struct {
+	ProvidedValue Extension
+}
+
+func (e InvalidExtension) Error() string {
+	return fmt.Sprintf("extension '%s' not allowed for this file type", e.ProvidedValue)
+}

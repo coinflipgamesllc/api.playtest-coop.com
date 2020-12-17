@@ -115,29 +115,16 @@ func (g *Game) ReplaceDesigners(designers []User) {
 
 // UpdateStats will replace the existing game stats with the provided values
 func (g *Game) UpdateStats(minPlayers, maxPlayers, minAge, estimatedPlaytime int) {
-	g.Stats = game.Stats{
-		MinPlayers:        minPlayers,
-		MaxPlayers:        maxPlayers,
-		MinAge:            minAge,
-		EstimatedPlaytime: estimatedPlaytime,
+	if minPlayers != 0 {
+		g.Stats.MinPlayers = minPlayers
 	}
-}
-
-// AddFile adds a file to this game
-func (g *Game) AddFile(newFile *File) {
-	if newFile == nil {
-		return
+	if maxPlayers != 0 {
+		g.Stats.MaxPlayers = maxPlayers
 	}
-
-	if g.Files == nil {
-		g.Files = []File{}
+	if minAge != 0 {
+		g.Stats.MinAge = minAge
 	}
-
-	for _, f := range g.Files {
-		if f.ID == newFile.ID {
-			return
-		}
+	if estimatedPlaytime != 0 {
+		g.Stats.EstimatedPlaytime = estimatedPlaytime
 	}
-
-	g.Files = append(g.Files, *newFile)
 }

@@ -33,6 +33,15 @@ func StatusFromString(s string) (Status, error) {
 	case "Archived":
 		return Archived, nil
 	default:
-		return "", fmt.Errorf("invalid status '%s'", s)
+		return "", InvalidStatus{s}
 	}
+}
+
+// InvalidStatus returned for strings that don't match a status we're tracking
+type InvalidStatus struct {
+	PassedValue string
+}
+
+func (e InvalidStatus) Error() string {
+	return fmt.Sprintf("invalid status '%s'", e.PassedValue)
 }

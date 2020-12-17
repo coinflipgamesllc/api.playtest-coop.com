@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"errors"
 	"time"
 
 	"github.com/coinflipgamesllc/api.playtest-coop.com/domain/user"
@@ -95,7 +94,7 @@ func (u *User) ChangeEmail(newEmail string) {
 func (u *User) ChangePassword(newPassword, oldPassword string) error {
 	valid, err := u.Account.ValidPassword(oldPassword)
 	if !valid {
-		return errors.New("password mismatch")
+		return user.PasswordMismatch{}
 	}
 	if err != nil {
 		return err
