@@ -229,6 +229,12 @@ var doc = `{
                             "$ref": "#/definitions/app.UserResponse"
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ValidationErrorResponse"
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -291,10 +297,10 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/controller.AckResponse"
+                            "$ref": "#/definitions/app.FileResponse"
                         }
                     },
                     "400": {
@@ -509,8 +515,8 @@ var doc = `{
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/app.GameResponse"
                         }
@@ -676,6 +682,14 @@ var doc = `{
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "app.FileResponse": {
+            "type": "object",
+            "properties": {
+                "file": {
+                    "$ref": "#/definitions/domain.File"
                 }
             }
         },
@@ -904,6 +918,17 @@ var doc = `{
             "properties": {
                 "error": {
                     "type": "string"
+                }
+            }
+        },
+        "controller.ValidationErrorResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 }
             }
         },

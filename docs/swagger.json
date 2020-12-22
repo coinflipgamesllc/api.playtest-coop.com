@@ -214,6 +214,12 @@
                             "$ref": "#/definitions/app.UserResponse"
                         }
                     },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ValidationErrorResponse"
+                        }
+                    },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
@@ -276,10 +282,10 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/controller.AckResponse"
+                            "$ref": "#/definitions/app.FileResponse"
                         }
                     },
                     "400": {
@@ -494,8 +500,8 @@
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "$ref": "#/definitions/app.GameResponse"
                         }
@@ -661,6 +667,14 @@
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "app.FileResponse": {
+            "type": "object",
+            "properties": {
+                "file": {
+                    "$ref": "#/definitions/domain.File"
                 }
             }
         },
@@ -889,6 +903,17 @@
             "properties": {
                 "error": {
                     "type": "string"
+                }
+            }
+        },
+        "controller.ValidationErrorResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 }
             }
         },

@@ -51,6 +51,11 @@ type (
 	ListFilesResponse struct {
 		Files []domain.File `json:"files"`
 	}
+
+	// FileResponse wrapper for a single file
+	FileResponse struct {
+		File *domain.File `json:"file"`
+	}
 )
 
 // PresignUpload generates a presigned URL for uploading a file

@@ -41,6 +41,11 @@ definitions:
     required:
     - title
     type: object
+  app.FileResponse:
+    properties:
+      file:
+        $ref: '#/definitions/domain.File'
+    type: object
   app.GameResponse:
     properties:
       game:
@@ -195,6 +200,13 @@ definitions:
     properties:
       error:
         type: string
+    type: object
+  controller.ValidationErrorResponse:
+    properties:
+      errors:
+        additionalProperties:
+          type: string
+        type: object
     type: object
   domain.File:
     properties:
@@ -423,6 +435,10 @@ paths:
           description: OK
           schema:
             $ref: '#/definitions/app.UserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.ValidationErrorResponse'
         "401":
           description: Unauthorized
           schema:
@@ -463,10 +479,10 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
-            $ref: '#/definitions/controller.AckResponse'
+            $ref: '#/definitions/app.FileResponse'
         "400":
           description: Bad Request
           schema:
@@ -605,8 +621,8 @@ paths:
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
             $ref: '#/definitions/app.GameResponse'
         "400":

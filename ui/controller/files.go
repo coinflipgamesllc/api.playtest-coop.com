@@ -18,6 +18,7 @@ type FileController struct {
 // @Produce json
 // @Param file body app.PresignUploadRequest true "File data"
 // @Success 200 {object} app.PresignUploadResponse
+// @Failure 400 {object} ValidationErrorResponse
 // @Failure 400 {object} RequestErrorResponse
 // @Failure 500 {object} ServerErrorResponse
 // @Tags files
@@ -26,7 +27,7 @@ func (t *FileController) PresignUpload(c *gin.Context) {
 	// Validate request
 	var req app.PresignUploadRequest
 	if err := c.ShouldBind(&req); err != nil {
-		requestErrorResponse(c, err.Error())
+		validationErrorResponse(c, err)
 		return
 	}
 
@@ -44,7 +45,8 @@ func (t *FileController) PresignUpload(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param file body app.CreateFileRequest true "File data"
-// @Success 200 {object} AckResponse
+// @Success 201 {object} app.FileResponse
+// @Failure 400 {object} ValidationErrorResponse
 // @Failure 400 {object} RequestErrorResponse
 // @Failure 500 {object} ServerErrorResponse
 // @Tags files
@@ -53,19 +55,19 @@ func (t *FileController) CreateFile(c *gin.Context) {
 	// Validate the request
 	var req app.CreateFileRequest
 	if err := c.ShouldBind(&req); err != nil {
-		requestErrorResponse(c, err.Error())
+		validationErrorResponse(c, err)
 		return
 	}
 
 	userID := userID(c)
-	_, err := t.FileService.CreateFile(&req, userID)
+	file, err := t.FileService.CreateFile(&req, userID)
 
 	if err != nil {
 		requestErrorResponse(c, "failed to save file")
 		return
 	}
 
-	ackResponse(c)
+	c.JSON(201, app.FileResponse{File: file})
 }
 
 // ListUserFiles lists files belonging to the authenticated user

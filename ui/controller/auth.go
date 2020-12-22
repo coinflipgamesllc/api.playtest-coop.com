@@ -47,6 +47,7 @@ func (t *AuthController) GetUser(c *gin.Context) {
 // @Produce json
 // @Param params body app.UpdateUserRequest false "User data to update"
 // @Success 200 {object} app.UserResponse
+// @Failure 400 {object} ValidationErrorResponse
 // @Failure 401 {object} UnauthorizedResponse
 // @Failure 500 {object} ServerErrorResponse
 // @Tags auth
@@ -57,7 +58,7 @@ func (t *AuthController) UpdateUser(c *gin.Context) {
 	// Validate request
 	var req app.UpdateUserRequest
 	if err := c.ShouldBind(&req); err != nil {
-		requestErrorResponse(c, err.Error())
+		validationErrorResponse(c, err)
 		return
 	}
 
@@ -81,6 +82,7 @@ func (t *AuthController) UpdateUser(c *gin.Context) {
 // @Produce json
 // @Param email body app.ResetPasswordRequest true "User email to request a password reset for"
 // @Success 200 {object} AckResponse
+// @Failure 400 {object} ValidationErrorResponse
 // @Failure 400 {object} RequestErrorResponse
 // @Tags auth
 // @Router /auth/reset-password [post]
@@ -88,7 +90,7 @@ func (t *AuthController) RequestResetPassword(c *gin.Context) {
 	// Validate request
 	var req app.ResetPasswordRequest
 	if err := c.ShouldBind(&req); err != nil {
-		requestErrorResponse(c, err.Error())
+		validationErrorResponse(c, err)
 		return
 	}
 
@@ -107,6 +109,7 @@ func (t *AuthController) RequestResetPassword(c *gin.Context) {
 // @Produce json
 // @Param credentials body app.SignupRequest true "User name, email, and password"
 // @Success 201 {object} app.UserResponse
+// @Failure 400 {object} ValidationErrorResponse
 // @Failure 400 {object} RequestErrorResponse
 // @Tags auth
 // @Router /auth/signup [post]
@@ -114,7 +117,7 @@ func (t *AuthController) Signup(c *gin.Context) {
 	// Validate request
 	var req app.SignupRequest
 	if err := c.ShouldBind(&req); err != nil {
-		requestErrorResponse(c, err.Error())
+		validationErrorResponse(c, err)
 		return
 	}
 
@@ -138,6 +141,7 @@ func (t *AuthController) Signup(c *gin.Context) {
 // @Produce json
 // @Param credentials body app.LoginRequest true "User email/password combo"
 // @Success 200 {object} app.UserResponse
+// @Failure 400 {object} ValidationErrorResponse
 // @Failure 400 {object} RequestErrorResponse
 // @Tags auth
 // @Router /auth/login [post]
@@ -145,7 +149,7 @@ func (t *AuthController) Login(c *gin.Context) {
 	// Validate request
 	var req app.LoginRequest
 	if err := c.ShouldBind(&req); err != nil {
-		requestErrorResponse(c, err.Error())
+		validationErrorResponse(c, err)
 		return
 	}
 

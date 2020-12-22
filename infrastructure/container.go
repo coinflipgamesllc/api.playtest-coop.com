@@ -10,6 +10,7 @@ import (
 	"github.com/coinflipgamesllc/api.playtest-coop.com/app"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/infrastructure/persistence"
+	"github.com/coinflipgamesllc/api.playtest-coop.com/infrastructure/validation"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/ui/controller"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/ui/events"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/ui/middleware"
@@ -218,6 +219,9 @@ func (c *Container) Router() *gin.Engine {
 		}
 
 		c.router = gin.New()
+
+		// Register the validator error formatter for later
+		validation.NewJSONFormatter()
 
 		c.router.Use(sessions.Sessions("ptc_sess", c.Session()))
 		c.router.Use(ginzap.Ginzap(c.Logger(), time.RFC3339, true))

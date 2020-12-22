@@ -18,6 +18,7 @@ type GameController struct {
 // @Produce json
 // @Param query query app.ListGamesRequest false "Filters for games"
 // @Success 200 {object} app.ListGamesResponse
+// @Failure 400 {object} ValidationErrorResponse
 // @Failure 400 {object} RequestErrorResponse
 // @Failure 500 {object} ServerErrorResponse
 // @Tags games
@@ -26,7 +27,7 @@ func (t *GameController) ListGames(c *gin.Context) {
 	// Validate request
 	var req app.ListGamesRequest
 	if err := c.ShouldBind(&req); err != nil {
-		requestErrorResponse(c, err.Error())
+		validationErrorResponse(c, err)
 		return
 	}
 
@@ -46,7 +47,8 @@ func (t *GameController) ListGames(c *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param game body app.CreateGameRequest true "Game data"
-// @Success 200 {object} app.GameResponse
+// @Success 201 {object} app.GameResponse
+// @Failure 400 {object} ValidationErrorResponse
 // @Failure 400 {object} RequestErrorResponse
 // @Failure 500 {object} ServerErrorResponse
 // @Tags games
@@ -55,7 +57,7 @@ func (t *GameController) CreateGame(c *gin.Context) {
 	// Validate request
 	var req app.CreateGameRequest
 	if err := c.ShouldBind(&req); err != nil {
-		requestErrorResponse(c, err.Error())
+		validationErrorResponse(c, err)
 		return
 	}
 
@@ -67,7 +69,7 @@ func (t *GameController) CreateGame(c *gin.Context) {
 		return
 	}
 
-	c.JSON(200, app.GameResponse{Game: game})
+	c.JSON(201, app.GameResponse{Game: game})
 }
 
 // GetGame returns a specific game by id
@@ -108,6 +110,7 @@ func (t *GameController) GetGame(c *gin.Context) {
 // @Param id path integer true "Game ID"
 // @Param game body app.UpdateGameRequest false "Game data"
 // @Success 200 {object} app.GameResponse
+// @Failure 400 {object} ValidationErrorResponse
 // @Failure 400 {object} RequestErrorResponse
 // @Failure 500 {object} ServerErrorResponse
 // @Tags games
@@ -125,7 +128,7 @@ func (t *GameController) UpdateGame(c *gin.Context) {
 	// Validate the request itself
 	var req app.UpdateGameRequest
 	if err := c.ShouldBind(&req); err != nil {
-		requestErrorResponse(c, err.Error())
+		validationErrorResponse(c, err)
 		return
 	}
 
