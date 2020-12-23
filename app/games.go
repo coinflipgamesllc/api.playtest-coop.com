@@ -53,6 +53,7 @@ type (
 		Status    string `json:"status"`
 		Designers []uint `json:"designers"`
 		Stats     *Stats `json:"stats" binding:"omitempty,dive"`
+		TTSMod    int    `json:"tts_mod" example:"12345678"`
 	}
 
 	// Response DTOs
@@ -215,6 +216,10 @@ func (s *GameService) UpdateGame(gameID uint, req *UpdateGameRequest, userID uin
 
 	if req.Stats != nil {
 		game.UpdateStats(req.Stats.MinPlayers, req.Stats.MaxPlayers, req.Stats.MinAge, req.Stats.EstimatedPlaytime)
+	}
+
+	if req.TTSMod != 0 {
+		game.LinkTabletopSimulatorMod(req.TTSMod)
 	}
 
 	// And save

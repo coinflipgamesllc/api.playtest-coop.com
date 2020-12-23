@@ -936,6 +936,10 @@ var doc = `{
                 },
                 "title": {
                     "type": "string"
+                },
+                "tts_mod": {
+                    "type": "integer",
+                    "example": 12345678
                 }
             }
         },
@@ -1085,6 +1089,10 @@ var doc = `{
                 "title": {
                     "type": "string",
                     "example": "The Best Game"
+                },
+                "tts_mod": {
+                    "type": "integer",
+                    "example": 2247242964
                 },
                 "updated_at": {
                     "type": "string",

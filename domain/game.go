@@ -20,6 +20,8 @@ type Game struct {
 	Stats     game.Stats  `json:"stats" gorm:"embedded"`
 	Designers []User      `json:"designers" gorm:"many2many:game_designers;"`
 	Files     []File      `json:"files"`
+
+	TabletopSimulatorMod int `json:"tts_mod" example:"2247242964"`
 }
 
 // GameRepository defines how to interact with games in database
@@ -127,4 +129,9 @@ func (g *Game) UpdateStats(minPlayers, maxPlayers, minAge, estimatedPlaytime int
 	if estimatedPlaytime != 0 {
 		g.Stats.EstimatedPlaytime = estimatedPlaytime
 	}
+}
+
+// LinkTabletopSimulatorMod will link the specified mod to this game
+func (g *Game) LinkTabletopSimulatorMod(mod int) {
+	g.TabletopSimulatorMod = mod
 }

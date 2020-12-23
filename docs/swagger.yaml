@@ -173,6 +173,9 @@ definitions:
         type: string
       title:
         type: string
+      tts_mod:
+        example: 12345678
+        type: integer
     type: object
   app.UpdateUserRequest:
     properties:
@@ -275,6 +278,9 @@ definitions:
       title:
         example: The Best Game
         type: string
+      tts_mod:
+        example: 2247242964
+        type: integer
       updated_at:
         example: "2020-12-13T15:42:40.578904-08:00"
         type: string
