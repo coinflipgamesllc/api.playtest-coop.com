@@ -26,6 +26,7 @@ type UserRepository interface {
 	UserOfEmail(string) (*User, error)
 	UserOfVerificationID(string) (*User, error)
 	UserOfOneTimePassword(string) (*User, error)
+	ListUsers(name string, limit, offset int, sort string) ([]User, int, error)
 	Save(*User) error
 }
 

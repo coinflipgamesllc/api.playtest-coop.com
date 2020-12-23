@@ -74,6 +74,22 @@ definitions:
         example: 1000
         type: integer
     type: object
+  app.ListUsersResponse:
+    properties:
+      limit:
+        example: 100
+        type: integer
+      offset:
+        example: 50
+        type: integer
+      total:
+        example: 1000
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/domain.User'
+        type: array
+    type: object
   app.LoginRequest:
     properties:
       email:
@@ -694,4 +710,43 @@ paths:
       summary: Update a specific game
       tags:
       - games
+  /users:
+    get:
+      consumes:
+      - application/json
+      parameters:
+      - example: 100
+        in: query
+        name: limit
+        type: integer
+      - example: New User
+        in: query
+        name: name
+        type: string
+      - example: 50
+        in: query
+        name: offset
+        type: integer
+      - example: name,desc
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.ListUsersResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.RequestErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ServerErrorResponse'
+      summary: List users matching the query with pagination
+      tags:
+      - users
 swagger: "2.0"

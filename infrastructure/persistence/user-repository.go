@@ -1,6 +1,8 @@
 package persistence
 
 import (
+	"strings"
+
 	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
 	"gorm.io/gorm"
 )
@@ -69,6 +71,47 @@ func (r *UserRepository) UserOfOneTimePassword(otp string) (*domain.User, error)
 	}
 
 	return user, nil
+}
+
+func (r *UserRepository) ListUsers(name string, limit, offset int, sort string) ([]domain.User, int, error) {
+	users := []domain.User{}
+
+	// Setup query
+	query := r.DB.Model(&domain.User{})
+
+	// Set order
+	sortCol := "users.updated_at"
+	sortDir := "desc"
+	if sort != "" {
+		parts := strings.Split(sort, ",")
+		sortCol = parts[0]
+
+		sortDir = "asc"
+		if len(parts) > 1 {
+			sortDir = parts[1]
+		}
+	}
+
+	query = query.Order(sortCol + " " + sortDir)
+
+	// Apply filters
+	if name != "" {
+		query = query.Where("users.name % ?", name)
+	}
+
+	// And run it
+	var total int64
+	result := query.
+		Count(&total).
+		Limit(limit).
+		Offset(offset).
+		Find(&users)
+
+	if result.Error != nil {
+		return []domain.User{}, 0, result.Error
+	}
+
+	return users, int(total), nil
 }
 
 // Save will upsert a user record

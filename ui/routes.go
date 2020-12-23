@@ -46,6 +46,12 @@ func RegisterRoutes(container *infrastructure.Container) {
 			games.GET("/:id", gameController.GetGame)
 			games.PUT("/:id", container.Authenticated(), gameController.UpdateGame)
 		}
+
+		userController := container.UserController()
+		users := v1.Group("/users")
+		{
+			users.GET("", container.Authenticated(), userController.ListUsers)
+		}
 	}
 
 	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
