@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
+	"github.com/coinflipgamesllc/api.playtest-coop.com/domain/game"
 	"go.uber.org/zap"
 )
 
@@ -48,12 +49,13 @@ type (
 
 	// UpdateGameRequest params for updating a game
 	UpdateGameRequest struct {
-		Title     string `json:"title"`
-		Overview  string `json:"overview"`
-		Status    string `json:"status"`
-		Designers []uint `json:"designers"`
-		Stats     *Stats `json:"stats" binding:"omitempty,dive"`
-		TTSMod    int    `json:"tts_mod" example:"12345678"`
+		Title     string   `json:"title"`
+		Overview  string   `json:"overview"`
+		Status    string   `json:"status"`
+		Designers []uint   `json:"designers"`
+		Stats     *Stats   `json:"stats" binding:"omitempty,dive"`
+		Mechanics []string `json:"mechanics" example:"['Hidden Movement', 'Worker Placement']"`
+		TTSMod    int      `json:"tts_mod" example:"12345678"`
 	}
 
 	// Response DTOs
@@ -69,6 +71,11 @@ type (
 	// GameResponse wrapper around a game
 	GameResponse struct {
 		Game *domain.Game `json:"game"`
+	}
+
+	// ListMechanicsResponse wrapper for a listing of mechanics
+	ListMechanicsResponse struct {
+		Mechanics []string `json:"mechanics" example:"['trick-taking', 'worker placement', ...]"`
 	}
 )
 
@@ -218,6 +225,10 @@ func (s *GameService) UpdateGame(gameID uint, req *UpdateGameRequest, userID uin
 		game.UpdateStats(req.Stats.MinPlayers, req.Stats.MaxPlayers, req.Stats.MinAge, req.Stats.EstimatedPlaytime)
 	}
 
+	if req.Mechanics != nil {
+		game.ReplaceMechanics(req.Mechanics)
+	}
+
 	if req.TTSMod != 0 {
 		game.LinkTabletopSimulatorMod(req.TTSMod)
 	}
@@ -230,4 +241,8 @@ func (s *GameService) UpdateGame(gameID uint, req *UpdateGameRequest, userID uin
 	}
 
 	return game, nil
+}
+
+func (s *GameService) ListAvailableMechanics() []string {
+	return game.AvailableMechanics()
 }

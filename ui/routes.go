@@ -47,6 +47,8 @@ func RegisterRoutes(container *infrastructure.Container) {
 			games.PUT("/:id", container.Authenticated(), gameController.UpdateGame)
 		}
 
+		v1.GET("/mechanics", gameController.ListAvailableMechanics)
+
 		userController := container.UserController()
 		users := v1.Group("/users")
 		{

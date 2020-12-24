@@ -140,3 +140,18 @@ func (t *GameController) UpdateGame(c *gin.Context) {
 
 	c.JSON(200, app.GameResponse{Game: game})
 }
+
+// ListAvailableMechanics lists mechanics available to be applied to games
+// @Summary List mechanics available to be applied to games
+// @Accept json
+// @Produce json
+// @Success 200 {object} app.ListMechanicsResponse
+// @Failure 400 {object} RequestErrorResponse
+// @Failure 500 {object} ServerErrorResponse
+// @Tags games
+// @Router /games/available-mechanics [get]
+func (t *GameController) ListAvailableMechanics(c *gin.Context) {
+	mechanics := t.GameService.ListAvailableMechanics()
+
+	c.JSON(200, app.ListMechanicsResponse{Mechanics: mechanics})
+}

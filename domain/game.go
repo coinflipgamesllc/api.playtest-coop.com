@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/coinflipgamesllc/api.playtest-coop.com/domain/game"
+	"github.com/lib/pq"
 	"gorm.io/gorm"
 )
 
@@ -14,12 +15,13 @@ type Game struct {
 	UpdatedAt time.Time      `json:"updated_at" example:"2020-12-13T15:42:40.578904-08:00"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
-	Title     string      `json:"title" gorm:"not null" example:"The Best Game"`
-	Overview  string      `json:"overview" example:"In the Best Game, players take on the role of ..."`
-	Status    game.Status `json:"status" example:"Prototype"`
-	Stats     game.Stats  `json:"stats" gorm:"embedded"`
-	Designers []User      `json:"designers" gorm:"many2many:game_designers;"`
-	Files     []File      `json:"files"`
+	Title     string         `json:"title" gorm:"not null" example:"The Best Game"`
+	Overview  string         `json:"overview" example:"In the Best Game, players take on the role of ..."`
+	Status    game.Status    `json:"status" example:"Prototype"`
+	Stats     game.Stats     `json:"stats" gorm:"embedded"`
+	Mechanics pq.StringArray `json:"mechanics" gorm:"type:text[]" example:"['Hidden Movement', 'Worker Placement']"`
+	Designers []User         `json:"designers" gorm:"many2many:game_designers;"`
+	Files     []File         `json:"files"`
 
 	TabletopSimulatorMod int `json:"tts_mod" example:"2247242964"`
 }
@@ -128,6 +130,14 @@ func (g *Game) UpdateStats(minPlayers, maxPlayers, minAge, estimatedPlaytime int
 	}
 	if estimatedPlaytime != 0 {
 		g.Stats.EstimatedPlaytime = estimatedPlaytime
+	}
+}
+
+// ReplaceMechanics will overwite the existing mechanics list with the new one
+func (g *Game) ReplaceMechanics(mechanics []string) {
+	g.Mechanics = nil
+	for _, mechanic := range mechanics {
+		g.Mechanics = append(g.Mechanics, mechanic)
 	}
 }
 
