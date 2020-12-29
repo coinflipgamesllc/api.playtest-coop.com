@@ -74,6 +74,17 @@ definitions:
         example: 1000
         type: integer
     type: object
+  app.ListMechanicsResponse:
+    properties:
+      mechanics:
+        example:
+        - '[''trick-taking'''
+        - ' ''worker placement'''
+        - ' ...]'
+        items:
+          type: string
+        type: array
+    type: object
   app.ListUsersResponse:
     properties:
       limit:
@@ -116,6 +127,9 @@ definitions:
     type: object
   app.PresignUploadResponse:
     properties:
+      key:
+        example: /97gfa9i3g2d3g20gfkadf.pdf
+        type: string
       url:
         example: https://assets.playtest-coop.com/...
         type: string
@@ -159,11 +173,24 @@ definitions:
         example: 1
         type: integer
     type: object
+  app.UpdateFileRequest:
+    properties:
+      caption:
+        example: What a cool image of a game!
+        type: string
+    type: object
   app.UpdateGameRequest:
     properties:
       designers:
         items:
           type: integer
+        type: array
+      mechanics:
+        example:
+        - '[''Hidden Movement'''
+        - ' ''Worker Placement'']'
+        items:
+          type: string
         type: array
       overview:
         type: string
@@ -267,6 +294,13 @@ definitions:
       id:
         example: 123
         type: integer
+      mechanics:
+        example:
+        - '[''Hidden Movement'''
+        - ' ''Worker Placement'']'
+        items:
+          type: string
+        type: array
       overview:
         example: In the Best Game, players take on the role of ...
         type: string
@@ -542,6 +576,38 @@ paths:
       summary: remove a file by ID
       tags:
       - files
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: File ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: File data
+        in: body
+        name: file
+        schema:
+          $ref: '#/definitions/app.UpdateFileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.FileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.RequestErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ServerErrorResponse'
+      summary: Update a specific file
+      tags:
+      - files
   /files/sign:
     get:
       consumes:
@@ -714,6 +780,28 @@ paths:
           schema:
             $ref: '#/definitions/controller.ServerErrorResponse'
       summary: Update a specific game
+      tags:
+      - games
+  /games/available-mechanics:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.ListMechanicsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.RequestErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ServerErrorResponse'
+      summary: List mechanics available to be applied to games
       tags:
       - games
   /users:

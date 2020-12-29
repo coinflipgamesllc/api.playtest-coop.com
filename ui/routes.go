@@ -35,6 +35,7 @@ func RegisterRoutes(container *infrastructure.Container) {
 			files.GET("/sign", container.Authenticated(), fileController.PresignUpload)
 			files.POST("", container.Authenticated(), fileController.CreateFile)
 			files.GET("", container.Authenticated(), fileController.ListUserFiles)
+			files.PUT("/:id", container.Authenticated(), fileController.UpdateFile)
 			files.DELETE("/:id", container.Authenticated(), fileController.DeleteFile)
 		}
 

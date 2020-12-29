@@ -26,6 +26,7 @@ type File struct {
 
 	Role    file.Role `json:"role" example:"Image"`
 	Caption string    `json:"caption" example:"What a cool image of a game!"`
+	OrderBy uint      `json:"order" example:"0"`
 
 	Filename string `json:"filename" example:"example-image.png"`
 	Bucket   string `json:"-"`
@@ -119,8 +120,14 @@ func (f *File) UpdateCaption(newCaption string) {
 	}
 }
 
-// BelongsTo attaches this file to a specific game
-func (f *File) BelongsTo(game *Game) {
+// UpdateOrder will simply accept the new order provided.
+// Calling code is responsible for re-sorting the collection this file appears in.
+func (f *File) UpdateOrder(order uint) {
+	f.OrderBy = order
+}
+
+// AttachGame attaches this file to a specific game
+func (f *File) AttachGame(game *Game) {
 	if game != nil {
 		f.GameID = &game.ID
 		f.Game = game

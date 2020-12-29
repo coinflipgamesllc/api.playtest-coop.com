@@ -31,13 +31,13 @@ func (t *FileController) PresignUpload(c *gin.Context) {
 		return
 	}
 
-	presignedURL, err := t.FileService.PresignUpload(req.Name, req.Extension)
+	presignedURL, key, err := t.FileService.PresignUpload(req.Name, req.Extension)
 	if err != nil {
 		serverErrorResponse(c, "presigned url could not be generated")
 		return
 	}
 
-	c.JSON(200, app.PresignUploadResponse{URL: presignedURL})
+	c.JSON(200, app.PresignUploadResponse{Key: key, URL: presignedURL})
 }
 
 // CreateFile saves a record of a file stored in S3
@@ -68,6 +68,44 @@ func (t *FileController) CreateFile(c *gin.Context) {
 	}
 
 	c.JSON(201, app.FileResponse{File: file})
+}
+
+// UpdateFile updates a specific file
+// @Summary Update a specific file
+// @Accept json
+// @Produce json
+// @Param id path integer true "File ID"
+// @Param file body app.UpdateFileRequest false "File data"
+// @Success 200 {object} app.FileResponse
+// @Failure 400 {object} ValidationErrorResponse
+// @Failure 400 {object} RequestErrorResponse
+// @Failure 500 {object} ServerErrorResponse
+// @Tags files
+// @Router /files/:id [put]
+func (t *FileController) UpdateFile(c *gin.Context) {
+	// Pull file by ID
+	fileID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		requestErrorResponse(c, err.Error())
+		return
+	}
+
+	userID := userID(c)
+
+	// Validate the request itself
+	var req app.UpdateFileRequest
+	if err := c.ShouldBind(&req); err != nil {
+		validationErrorResponse(c, err)
+		return
+	}
+
+	file, err := t.FileService.UpdateFile(uint(fileID), &req, userID)
+	if err != nil {
+		serverErrorResponse(c, "failed to update file")
+		return
+	}
+
+	c.JSON(200, app.FileResponse{File: file})
 }
 
 // ListUserFiles lists files belonging to the authenticated user

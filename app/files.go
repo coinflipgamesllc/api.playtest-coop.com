@@ -40,10 +40,17 @@ type (
 		GameID   uint   `json:"game" example:"123"`
 	}
 
+	// UpdateFileRequest params for storing a record of a file
+	UpdateFileRequest struct {
+		Caption string `json:"caption" example:"What a cool image of a game!"`
+		OrderBy *uint  `json:"order" example:"0"`
+	}
+
 	// Response DTOs
 
 	// PresignUploadResponse wrapper for presigned URL
 	PresignUploadResponse struct {
+		Key string `json:"key" example:"/97gfa9i3g2d3g20gfkadf.pdf"`
 		URL string `json:"url" example:"https://assets.playtest-coop.com/..."`
 	}
 
@@ -59,19 +66,20 @@ type (
 )
 
 // PresignUpload generates a presigned URL for uploading a file
-func (s *FileService) PresignUpload(name, extension string) (string, error) {
+func (s *FileService) PresignUpload(name, extension string) (string, string, error) {
+	key := domain.GenerateObjectName(name, extension)
 	presignedURL, err := s.S3Client.PresignedPutObject(
 		context.Background(),
 		s.S3Bucket,
-		domain.GenerateObjectName(name, extension),
+		key,
 		time.Duration(1000)*time.Minute,
 	)
 
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
-	return presignedURL.String(), nil
+	return presignedURL.String(), key, nil
 }
 
 // CreateFile stores a file in the database, optionally tied to a game
@@ -114,10 +122,46 @@ func (s *FileService) CreateFile(req *CreateFileRequest, userID uint) (*domain.F
 			return nil, err
 		}
 
-		file.BelongsTo(game)
+		file.AttachGame(game)
 	}
 
 	// Save
+	err = s.FileRepository.Save(file)
+	if err != nil {
+		s.Logger.Error(err.Error())
+		return nil, err
+	}
+
+	return file, nil
+}
+
+// UpdateFile allows changes to a specific file by the original uploader
+func (s *FileService) UpdateFile(fileID uint, req *UpdateFileRequest, userID uint) (*domain.File, error) {
+	file, err := s.FileRepository.FileOfID(fileID)
+	if err != nil {
+		s.Logger.Error(err.Error())
+		return nil, err
+	}
+
+	if file == nil {
+		return nil, errors.New("file not found")
+	}
+
+	// Ensure that the current user is the uploader and deny update if not
+	if file.UploadedByID != userID {
+		return nil, errors.New("unauthorized")
+	}
+
+	// Update file
+	if req.Caption != "" {
+		file.UpdateCaption(req.Caption)
+	}
+
+	if req.OrderBy != nil {
+		file.UpdateOrder(*req.OrderBy)
+	}
+
+	// And save
 	err = s.FileRepository.Save(file)
 	if err != nil {
 		s.Logger.Error(err.Error())

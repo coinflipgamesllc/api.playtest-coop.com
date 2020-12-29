@@ -17,7 +17,9 @@ func (r *GameRepository) ListGames(title, status, designer string, playerCount, 
 	games := []domain.Game{}
 
 	// Setup query
-	query := r.DB.Model(&domain.Game{}).Preload("Designers")
+	query := r.DB.Model(&domain.Game{}).Preload("Designers").Preload("Files", func(db *gorm.DB) *gorm.DB {
+		return db.Where("files.role = 'Image'").Order("files.order_by ASC")
+	})
 
 	// Set order
 	sortCol := "games.updated_at"
@@ -80,7 +82,9 @@ func (r *GameRepository) ListGames(title, status, designer string, playerCount, 
 
 func (r *GameRepository) GameOfID(id uint) (*domain.Game, error) {
 	game := &domain.Game{}
-	result := r.DB.Preload(clause.Associations).First(game, id)
+	result := r.DB.Preload(clause.Associations).Preload("Files", func(db *gorm.DB) *gorm.DB {
+		return db.Order("files.order_by ASC")
+	}).First(game, id)
 
 	if result.Error != nil {
 		if result.Error == gorm.ErrRecordNotFound {

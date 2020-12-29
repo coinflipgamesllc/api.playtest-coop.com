@@ -319,6 +319,55 @@ var doc = `{
             }
         },
         "/files/:id": {
+            "put": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "files"
+                ],
+                "summary": "Update a specific file",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "File ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "File data",
+                        "name": "file",
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/app.UpdateFileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/app.FileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/controller.RequestErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ServerErrorResponse"
+                        }
+                    }
+                }
+            },
             "delete": {
                 "produces": [
                     "application/json"
@@ -625,6 +674,40 @@ var doc = `{
                 }
             }
         },
+        "/games/available-mechanics": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "List mechanics available to be applied to games",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/app.ListMechanicsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/controller.RequestErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "consumes": [
@@ -795,6 +878,22 @@ var doc = `{
                 }
             }
         },
+        "app.ListMechanicsResponse": {
+            "type": "object",
+            "properties": {
+                "mechanics": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "['trick-taking'",
+                        " 'worker placement'",
+                        " ...]"
+                    ]
+                }
+            }
+        },
         "app.ListUsersResponse": {
             "type": "object",
             "properties": {
@@ -855,6 +954,10 @@ var doc = `{
         "app.PresignUploadResponse": {
             "type": "object",
             "properties": {
+                "key": {
+                    "type": "string",
+                    "example": "/97gfa9i3g2d3g20gfkadf.pdf"
+                },
                 "url": {
                     "type": "string",
                     "example": "https://assets.playtest-coop.com/..."
@@ -916,6 +1019,15 @@ var doc = `{
                 }
             }
         },
+        "app.UpdateFileRequest": {
+            "type": "object",
+            "properties": {
+                "caption": {
+                    "type": "string",
+                    "example": "What a cool image of a game!"
+                }
+            }
+        },
         "app.UpdateGameRequest": {
             "type": "object",
             "properties": {
@@ -924,6 +1036,16 @@ var doc = `{
                     "items": {
                         "type": "integer"
                     }
+                },
+                "mechanics": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "['Hidden Movement'",
+                        " 'Worker Placement']"
+                    ]
                 },
                 "overview": {
                     "type": "string"
@@ -1074,6 +1196,16 @@ var doc = `{
                 "id": {
                     "type": "integer",
                     "example": 123
+                },
+                "mechanics": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "['Hidden Movement'",
+                        " 'Worker Placement']"
+                    ]
                 },
                 "overview": {
                     "type": "string",

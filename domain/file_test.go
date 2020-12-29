@@ -180,9 +180,9 @@ func TestUpdateCaption(t *testing.T) {
 	}
 }
 
-func TestBelongsTo(t *testing.T) {
+func TestAttachGame(t *testing.T) {
 	f := &File{}
-	f.BelongsTo(&Game{ID: 123})
+	f.AttachGame(&Game{ID: 123})
 
 	if *f.GameID != uint(123) {
 		t.Error("Belongs to needs to create the relationship with game")
