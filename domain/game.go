@@ -28,7 +28,7 @@ type Game struct {
 
 // GameRepository defines how to interact with games in database
 type GameRepository interface {
-	ListGames(title, status, designer string, playerCount, age, playtime, limit, offset int, sort string) ([]Game, int, error)
+	ListGames(title, status, designer string, owner uint, playerCount, age, playtime, limit, offset int, sort string) ([]Game, int, error)
 	GameOfID(id uint) (*Game, error)
 	Save(*Game) error
 }

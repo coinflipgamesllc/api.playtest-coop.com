@@ -13,7 +13,7 @@ type GameRepository struct {
 	DB *gorm.DB
 }
 
-func (r *GameRepository) ListGames(title, status, designer string, playerCount, age, playtime, limit, offset int, sort string) ([]domain.Game, int, error) {
+func (r *GameRepository) ListGames(title, status, designer string, owner uint, playerCount, age, playtime, limit, offset int, sort string) ([]domain.Game, int, error) {
 	games := []domain.Game{}
 
 	// Setup query
@@ -41,15 +41,20 @@ func (r *GameRepository) ListGames(title, status, designer string, playerCount, 
 		query = query.Where("games.title % ?", title)
 	}
 
-	if status != "" {
-		query = query.Where("games.status = ?", status)
-	} else {
-		query = query.Where("games.status != 'Archived'")
-	}
+	if owner == 0 {
+		if status != "" {
+			query = query.Where("games.status = ?", status)
+		} else {
+			query = query.Where("games.status != 'Archived'")
+		}
 
-	if designer != "" {
-		designerQuery := r.DB.Select("game_designers.game_id").Table("game_designers").Joins("join users on users.id = game_designers.user_id").Where("users.name % ?", designer)
-		query = query.Where("games.id in (?)", designerQuery)
+		if designer != "" {
+			designerQuery := r.DB.Select("game_designers.game_id").Table("game_designers").Joins("join users on users.id = game_designers.user_id").Where("users.name % ?", designer)
+			query = query.Where("games.id in (?)", designerQuery)
+		}
+	} else {
+		ownerQuery := r.DB.Select("game_designers.game_id").Table("game_designers").Joins("join users on users.id = ?", owner)
+		query = query.Where("games.id in (?)", ownerQuery)
 	}
 
 	if playerCount != 0 {

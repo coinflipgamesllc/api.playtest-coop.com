@@ -23,6 +23,7 @@ type (
 		Title       string `form:"title" example:"New Game"`
 		Status      string `form:"status" example:"Prototype"`
 		Designer    string `form:"designer" example:"Designer McDesignerton"`
+		Owner       uint   `form:"owner" example:"123"`
 		PlayerCount int    `form:"player_count" example:"2"`
 		Age         int    `form:"age" example:"13"`
 		Playtime    int    `form:"playtime" example:"30"`
@@ -94,6 +95,7 @@ func (s *GameService) ListGames(req *ListGamesRequest) ([]domain.Game, int, erro
 		req.Title,
 		req.Status,
 		req.Designer,
+		req.Owner,
 		req.PlayerCount,
 		req.Age,
 		req.Playtime,
