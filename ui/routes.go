@@ -46,6 +46,8 @@ func RegisterRoutes(container *infrastructure.Container) {
 			games.POST("", container.Authenticated(), gameController.CreateGame)
 			games.GET("/:id", gameController.GetGame)
 			games.PUT("/:id", container.Authenticated(), gameController.UpdateGame)
+
+			games.GET("/:id/rules", gameController.GetRules)
 		}
 
 		v1.GET("/mechanics", gameController.ListAvailableMechanics)

@@ -15,13 +15,14 @@ type Game struct {
 	UpdatedAt time.Time      `json:"updated_at" example:"2020-12-13T15:42:40.578904-08:00"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
 
-	Title     string         `json:"title" gorm:"not null" example:"The Best Game"`
-	Overview  string         `json:"overview" example:"In the Best Game, players take on the role of ..."`
-	Status    game.Status    `json:"status" example:"Prototype"`
-	Stats     game.Stats     `json:"stats" gorm:"embedded"`
-	Mechanics pq.StringArray `json:"mechanics" gorm:"type:text[]" example:"['Hidden Movement', 'Worker Placement']"`
-	Designers []User         `json:"designers" gorm:"many2many:game_designers;"`
-	Files     []File         `json:"files"`
+	Title     string              `json:"title" gorm:"not null" example:"The Best Game"`
+	Overview  string              `json:"overview" example:"In the Best Game, players take on the role of ..."`
+	Status    game.Status         `json:"status" example:"Prototype"`
+	Stats     game.Stats          `json:"stats" gorm:"embedded"`
+	Mechanics pq.StringArray      `json:"mechanics" gorm:"type:text[]" example:"['Hidden Movement', 'Worker Placement']"`
+	Designers []User              `json:"designers" gorm:"many2many:game_designers;"`
+	Files     []File              `json:"files"`
+	Rules     []game.RulesSection `json:"-"`
 
 	TabletopSimulatorMod int `json:"tts_mod" example:"2247242964"`
 }
@@ -30,6 +31,7 @@ type Game struct {
 type GameRepository interface {
 	ListGames(title, status, designer string, owner uint, playerCount, age, playtime, limit, offset int, sort string) ([]Game, int, error)
 	GameOfID(id uint) (*Game, error)
+	RulesOfGame(id uint) ([]game.RulesSection, error)
 	Save(*Game) error
 }
 

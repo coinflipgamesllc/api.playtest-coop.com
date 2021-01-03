@@ -9,6 +9,7 @@ import (
 
 	"github.com/coinflipgamesllc/api.playtest-coop.com/app"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
+	"github.com/coinflipgamesllc/api.playtest-coop.com/domain/game"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/infrastructure/persistence"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/infrastructure/validation"
 	"github.com/coinflipgamesllc/api.playtest-coop.com/ui/controller"
@@ -16,7 +17,7 @@ import (
 	"github.com/coinflipgamesllc/api.playtest-coop.com/ui/middleware"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
-	"github.com/gin-contrib/zap"
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/mailgun/mailgun-go/v4"
 	"github.com/minio/minio-go/v7"
@@ -183,6 +184,7 @@ func (c *Container) DB() *gorm.DB {
 			&domain.File{},
 			&domain.Game{},
 			&domain.User{},
+			&game.RulesSection{},
 		)
 
 		c.db = db

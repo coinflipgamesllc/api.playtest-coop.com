@@ -142,6 +142,13 @@ definitions:
     required:
     - email
     type: object
+  app.RulesResponse:
+    properties:
+      rules:
+        items:
+          $ref: '#/definitions/game.RulesSection'
+        type: array
+    type: object
   app.SignupRequest:
     properties:
       email:
@@ -178,6 +185,9 @@ definitions:
       caption:
         example: What a cool image of a game!
         type: string
+      order:
+        example: 0
+        type: integer
     type: object
   app.UpdateGameRequest:
     properties:
@@ -268,6 +278,9 @@ definitions:
       id:
         example: 123
         type: integer
+      order:
+        example: 0
+        type: integer
       role:
         example: Image
         type: string
@@ -332,6 +345,27 @@ definitions:
         type: string
       pronouns:
         example: they/them
+        type: string
+      updated_at:
+        example: "2020-12-13T15:42:40.578904-08:00"
+        type: string
+    type: object
+  game.RulesSection:
+    properties:
+      content:
+        example: <ul><li>52 Cards</li><li>10 dice</li>...
+        type: string
+      created_at:
+        example: "2020-12-11T15:29:49.321629-08:00"
+        type: string
+      id:
+        example: 123
+        type: integer
+      order:
+        example: 0
+        type: integer
+      title:
+        example: Components
         type: string
       updated_at:
         example: "2020-12-13T15:42:40.578904-08:00"
@@ -658,6 +692,10 @@ paths:
         in: query
         name: offset
         type: integer
+      - example: 123
+        in: query
+        name: owner
+        type: integer
       - example: 2
         in: query
         name: playerCount
@@ -780,6 +818,32 @@ paths:
           schema:
             $ref: '#/definitions/controller.ServerErrorResponse'
       summary: Update a specific game
+      tags:
+      - games
+  /games/:id/rules:
+    get:
+      parameters:
+      - description: Game ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/app.RulesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/controller.RequestErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/controller.ServerErrorResponse'
+      summary: Return rules for a specific game by id
       tags:
       - games
   /games/available-mechanics:

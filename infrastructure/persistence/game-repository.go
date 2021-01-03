@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/coinflipgamesllc/api.playtest-coop.com/domain"
+	"github.com/coinflipgamesllc/api.playtest-coop.com/domain/game"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 )
@@ -100,6 +101,22 @@ func (r *GameRepository) GameOfID(id uint) (*domain.Game, error) {
 	}
 
 	return game, nil
+}
+
+func (r *GameRepository) RulesOfGame(id uint) ([]game.RulesSection, error) {
+	rules := []game.RulesSection{}
+
+	result := r.DB.Find(&rules).Where("game_id = ?", id).Order("rules_section.order_by ASC")
+
+	if result.Error != nil {
+		if result.Error == gorm.ErrRecordNotFound {
+			return nil, nil
+		}
+
+		return nil, result.Error
+	}
+
+	return rules, nil
 }
 
 // Save will upsert a game record

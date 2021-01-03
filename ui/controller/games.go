@@ -103,6 +103,37 @@ func (t *GameController) GetGame(c *gin.Context) {
 	c.JSON(200, app.GameResponse{Game: game})
 }
 
+// GetRules returns rules for a specific game by id
+// @Summary Return rules for a specific game by id
+// @Produce json
+// @Param id path integer true "Game ID"
+// @Success 200 {object} app.RulesResponse
+// @Failure 400 {object} RequestErrorResponse
+// @Failure 500 {object} ServerErrorResponse
+// @Tags games
+// @Router /games/:id/rules [get]
+func (t *GameController) GetRules(c *gin.Context) {
+	// Validate request
+	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	if err != nil {
+		requestErrorResponse(c, err.Error())
+		return
+	}
+
+	rules, err := t.GameService.GetRules(uint(id))
+	if err != nil {
+		serverErrorResponse(c, "failed to fetch rules")
+		return
+	}
+
+	if rules == nil {
+		notFoundResponse(c, "rules not found")
+		return
+	}
+
+	c.JSON(200, app.RulesResponse{Rules: rules})
+}
+
 // UpdateGame updates a specific game
 // @Summary Update a specific game
 // @Accept json

@@ -74,6 +74,11 @@ type (
 		Game *domain.Game `json:"game"`
 	}
 
+	// RulesResponse wrapper around a collection of rules sections
+	RulesResponse struct {
+		Rules []game.RulesSection `json:"rules"`
+	}
+
 	// ListMechanicsResponse wrapper for a listing of mechanics
 	ListMechanicsResponse struct {
 		Mechanics []string `json:"mechanics" example:"['trick-taking', 'worker placement', ...]"`
@@ -166,6 +171,17 @@ func (s *GameService) GetGame(gameID uint) (*domain.Game, error) {
 	}
 
 	return game, nil
+}
+
+// GetRules returns rules for a specific game
+func (s *GameService) GetRules(gameID uint) ([]game.RulesSection, error) {
+	rules, err := s.GameRepository.RulesOfGame(gameID)
+	if err != nil {
+		s.Logger.Error(err.Error())
+		return nil, err
+	}
+
+	return rules, nil
 }
 
 // UpdateGame updates a specific game

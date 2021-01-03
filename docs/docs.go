@@ -491,6 +491,12 @@ var doc = `{
                     },
                     {
                         "type": "integer",
+                        "example": 123,
+                        "name": "owner",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
                         "example": 2,
                         "name": "playerCount",
                         "in": "query"
@@ -657,6 +663,46 @@ var doc = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/app.GameResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/controller.RequestErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/controller.ServerErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/games/:id/rules": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "games"
+                ],
+                "summary": "Return rules for a specific game by id",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Game ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/app.RulesResponse"
                         }
                     },
                     "400": {
@@ -976,6 +1022,17 @@ var doc = `{
                 }
             }
         },
+        "app.RulesResponse": {
+            "type": "object",
+            "properties": {
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/game.RulesSection"
+                    }
+                }
+            }
+        },
         "app.SignupRequest": {
             "type": "object",
             "required": [
@@ -1025,6 +1082,10 @@ var doc = `{
                 "caption": {
                     "type": "string",
                     "example": "What a cool image of a game!"
+                },
+                "order": {
+                    "type": "integer",
+                    "example": 0
                 }
             }
         },
@@ -1160,6 +1221,10 @@ var doc = `{
                     "type": "integer",
                     "example": 123
                 },
+                "order": {
+                    "type": "integer",
+                    "example": 0
+                },
                 "role": {
                     "type": "string",
                     "example": "Image"
@@ -1250,6 +1315,35 @@ var doc = `{
                 "pronouns": {
                     "type": "string",
                     "example": "they/them"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "example": "2020-12-13T15:42:40.578904-08:00"
+                }
+            }
+        },
+        "game.RulesSection": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "example": "\u003cul\u003e\u003cli\u003e52 Cards\u003c/li\u003e\u003cli\u003e10 dice\u003c/li\u003e..."
+                },
+                "created_at": {
+                    "type": "string",
+                    "example": "2020-12-11T15:29:49.321629-08:00"
+                },
+                "id": {
+                    "type": "integer",
+                    "example": 123
+                },
+                "order": {
+                    "type": "integer",
+                    "example": 0
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Components"
                 },
                 "updated_at": {
                     "type": "string",
