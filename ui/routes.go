@@ -29,6 +29,15 @@ func RegisterRoutes(container *infrastructure.Container) {
 			auth.GET("/verify-email/:id", authController.VerifyEmail)
 		}
 
+		eventController := container.EventController()
+		events := v1.Group("/events")
+		{
+			events.GET("", eventController.ListEvents)
+			events.POST("", container.Authenticated(), eventController.CreateEvent)
+			events.GET("/:id", eventController.GetEvent)
+			events.PUT("/:id", container.Authenticated(), eventController.UpdateEvent)
+		}
+
 		fileController := container.FileController()
 		files := v1.Group("/files")
 		{

@@ -30,8 +30,8 @@ type UserRepository interface {
 	Save(*User) error
 }
 
-func userCreated(u *User) Event {
-	return Event{
+func userCreated(u *User) DomainEvent {
+	return DomainEvent{
 		Name: "User/Created",
 		Data: map[string]interface{}{
 			"id":             u.ID,
@@ -42,8 +42,8 @@ func userCreated(u *User) Event {
 	}
 }
 
-func userEmailUnverified(u *User) Event {
-	return Event{
+func userEmailUnverified(u *User) DomainEvent {
+	return DomainEvent{
 		Name: "User/EmailUnverified",
 		Data: map[string]interface{}{
 			"id":             u.ID,
@@ -54,8 +54,8 @@ func userEmailUnverified(u *User) Event {
 	}
 }
 
-func passwordResetRequested(u *User) Event {
-	return Event{
+func passwordResetRequested(u *User) DomainEvent {
+	return DomainEvent{
 		Name: "User/PasswordResetRequested",
 		Data: map[string]interface{}{
 			"name":  u.Name,
@@ -157,8 +157,10 @@ func (u *User) SetPronouns(newPronouns string) {
 
 // AfterCreate hook for sending welcome emails
 func (u *User) AfterCreate(tx *gorm.DB) error {
-	event := userCreated(u)
-	pubsub.Instance.Publish(event.Name, event.Data)
+	if !u.Account.Verified {
+		event := userCreated(u)
+		pubsub.Instance.Publish(event.Name, event.Data)
+	}
 
 	return nil
 }

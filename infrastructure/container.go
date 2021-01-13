@@ -30,16 +30,18 @@ import (
 // Container is a lazy-load dependency injection container
 type Container struct {
 	// Application
-	authService *app.AuthService
-	fileService *app.FileService
-	gameService *app.GameService
-	mailService *app.MailService
-	userService *app.UserService
+	authService  *app.AuthService
+	eventService *app.EventService
+	fileService  *app.FileService
+	gameService  *app.GameService
+	mailService  *app.MailService
+	userService  *app.UserService
 
 	// Domain
-	fileRepository domain.FileRepository
-	gameRepository domain.GameRepository
-	userRepository domain.UserRepository
+	eventRepository domain.EventRepository
+	fileRepository  domain.FileRepository
+	gameRepository  domain.GameRepository
+	userRepository  domain.UserRepository
 
 	// Infrastructure
 	db        *gorm.DB
@@ -51,10 +53,11 @@ type Container struct {
 	templates map[string]*template.Template
 
 	// UI
-	authController *controller.AuthController
-	fileController *controller.FileController
-	gameController *controller.GameController
-	userController *controller.UserController
+	authController  *controller.AuthController
+	eventController *controller.EventController
+	fileController  *controller.FileController
+	gameController  *controller.GameController
+	userController  *controller.UserController
 
 	authenticated gin.HandlerFunc
 
@@ -72,6 +75,19 @@ func (c *Container) AuthService() *app.AuthService {
 	}
 
 	return c.authService
+}
+
+// EventService for general event content interaction
+func (c *Container) EventService() *app.EventService {
+	if c.eventService == nil {
+		c.eventService = &app.EventService{
+			EventRepository: c.EventRepository(),
+			UserRepository:  c.UserRepository(),
+			Logger:          c.Logger(),
+		}
+	}
+
+	return c.eventService
 }
 
 // FileService for handling file uploads/downloads/etc
@@ -127,6 +143,17 @@ func (c *Container) UserService() *app.UserService {
 	}
 
 	return c.userService
+}
+
+// EventRepository implementation for database
+func (c *Container) EventRepository() domain.EventRepository {
+	if c.eventRepository == nil {
+		c.eventRepository = &persistence.EventRepository{
+			DB: c.DB(),
+		}
+	}
+
+	return c.eventRepository
 }
 
 // FileRepository implementation for database
@@ -185,6 +212,7 @@ func (c *Container) DB() *gorm.DB {
 			&domain.Game{},
 			&domain.User{},
 			&game.RulesSection{},
+			&domain.Event{},
 		)
 
 		c.db = db
@@ -322,6 +350,17 @@ func (c *Container) AuthController() *controller.AuthController {
 	}
 
 	return c.authController
+}
+
+// EventController for handling /events routes
+func (c *Container) EventController() *controller.EventController {
+	if c.eventController == nil {
+		c.eventController = &controller.EventController{
+			EventService: c.EventService(),
+		}
+	}
+
+	return c.eventController
 }
 
 // FileController for handling /files routes
