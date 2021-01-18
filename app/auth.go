@@ -22,6 +22,7 @@ type (
 		NewPassword string `json:"new_password" binding:"omitempty,nefield=OldPassword,min=10" example:"AVerySecurePassword123!"`
 		OldPassword string `json:"old_password" binding:"omitempty" example:"NotASecurePassword"`
 		Pronouns    string `json:"pronouns" binding:"omitempty,contains=/" example:"they/them"`
+		Color       string `json:"color" binding:"omitempty,hexcolor" example:"#2a9d8f"`
 	}
 
 	// SignupRequest params for signing up for a new account
@@ -82,12 +83,19 @@ func (s *AuthService) UpdateUser(req *UpdateUserRequest, userID uint) (*domain.U
 		user.SetPronouns(req.Pronouns)
 	}
 
+	if req.Color != "" {
+		user.SetColor(req.Color)
+	}
+
 	// Save changes
 	err = s.UserRepository.Save(user)
 	if err != nil {
 		s.Logger.Error(err.Error())
 		return nil, domain.GenericServerError{}
 	}
+
+	// Decorate the email for this response
+	user.Email = user.Account.Email
 
 	return user, nil
 }
@@ -160,6 +168,9 @@ func (s *AuthService) Signup(name, email, password string) (*domain.User, error)
 		return nil, domain.GenericServerError{}
 	}
 
+	// Decorate the email for this response
+	user.Email = user.Account.Email
+
 	return user, nil
 }
 
@@ -186,6 +197,9 @@ func (s *AuthService) Login(email, password string) (*domain.User, error) {
 	if !ok {
 		return nil, domain.CredentialsIncorrect{}
 	}
+
+	// Decorate the email for this response
+	user.Email = user.Account.Email
 
 	return user, nil
 }
@@ -215,5 +229,13 @@ func (s *AuthService) VerifyEmail(id string) error {
 
 // FetchUser returns the user with the provided ID
 func (s *AuthService) FetchUser(id uint) (*domain.User, error) {
-	return s.UserRepository.UserOfID(id)
+	user, err := s.UserRepository.UserOfID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	// Decorate the email for this response
+	user.Email = user.Account.Email
+
+	return user, nil
 }

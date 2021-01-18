@@ -17,7 +17,9 @@ type User struct {
 
 	Name     string       `json:"name" example:"User McUserton"`
 	Account  user.Account `json:"-" gorm:"embedded"`
+	Email    string       `json:"email,omitempty" gorm:"-"` // Only for decorating the json response
 	Pronouns string       `json:"pronouns" example:"they/them"`
+	Color    string       `json:"color" example:"#2a9d8f"`
 }
 
 // UserRepository defines how to interact with the user in database
@@ -153,6 +155,11 @@ func (u *User) ResetPassword(otp string) error {
 // SetPronouns updates the user's pronouns
 func (u *User) SetPronouns(newPronouns string) {
 	u.Pronouns = newPronouns
+}
+
+// SetColor replaces the user's favorite color
+func (u *User) SetColor(newColor string) {
+	u.Color = newColor
 }
 
 // AfterCreate hook for sending welcome emails
