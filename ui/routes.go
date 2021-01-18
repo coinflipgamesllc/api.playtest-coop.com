@@ -61,6 +61,19 @@ func RegisterRoutes(container *infrastructure.Container) {
 
 		v1.GET("/mechanics", gameController.ListAvailableMechanics)
 
+		playtestController := container.PlaytestController()
+		playtests := v1.Group("/playtests")
+		{
+			playtests.GET("", playtestController.PlaytestsOnDate)
+			playtests.POST("/register-game", playtestController.RegisterGame)
+			playtests.PUT("/:id/location", playtestController.AssignLocation)
+			playtests.PUT("/:id/player", playtestController.AddPlayer)
+			playtests.DELETE("/:id/player", playtestController.RemovePlayer)
+			playtests.PUT("/:id/start", playtestController.Start)
+			playtests.PUT("/:id/start-feedback", playtestController.StartFeedback)
+			playtests.PUT("/:id/finish", playtestController.Finish)
+		}
+
 		userController := container.UserController()
 		users := v1.Group("/users")
 		{

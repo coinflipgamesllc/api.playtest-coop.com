@@ -30,18 +30,20 @@ import (
 // Container is a lazy-load dependency injection container
 type Container struct {
 	// Application
-	authService  *app.AuthService
-	eventService *app.EventService
-	fileService  *app.FileService
-	gameService  *app.GameService
-	mailService  *app.MailService
-	userService  *app.UserService
+	authService     *app.AuthService
+	eventService    *app.EventService
+	fileService     *app.FileService
+	gameService     *app.GameService
+	mailService     *app.MailService
+	playtestService *app.PlaytestService
+	userService     *app.UserService
 
 	// Domain
-	eventRepository domain.EventRepository
-	fileRepository  domain.FileRepository
-	gameRepository  domain.GameRepository
-	userRepository  domain.UserRepository
+	eventRepository    domain.EventRepository
+	fileRepository     domain.FileRepository
+	gameRepository     domain.GameRepository
+	playtestRepository domain.PlaytestRepository
+	userRepository     domain.UserRepository
 
 	// Infrastructure
 	db        *gorm.DB
@@ -53,11 +55,12 @@ type Container struct {
 	templates map[string]*template.Template
 
 	// UI
-	authController  *controller.AuthController
-	eventController *controller.EventController
-	fileController  *controller.FileController
-	gameController  *controller.GameController
-	userController  *controller.UserController
+	authController     *controller.AuthController
+	eventController    *controller.EventController
+	fileController     *controller.FileController
+	gameController     *controller.GameController
+	playtestController *controller.PlaytestController
+	userController     *controller.UserController
 
 	authenticated gin.HandlerFunc
 
@@ -133,6 +136,21 @@ func (c *Container) MailService() *app.MailService {
 	return c.mailService
 }
 
+// PlaytestService for general playtest content interaction
+func (c *Container) PlaytestService() *app.PlaytestService {
+	if c.playtestService == nil {
+		c.playtestService = &app.PlaytestService{
+			EventRepository:    c.EventRepository(),
+			GameRepository:     c.GameRepository(),
+			PlaytestRepository: c.PlaytestRepository(),
+			UserRepository:     c.UserRepository(),
+			Logger:             c.Logger(),
+		}
+	}
+
+	return c.playtestService
+}
+
 // UserService for general user content interaction
 func (c *Container) UserService() *app.UserService {
 	if c.userService == nil {
@@ -178,6 +196,17 @@ func (c *Container) GameRepository() domain.GameRepository {
 	return c.gameRepository
 }
 
+// PlaytestRepository implementation for database
+func (c *Container) PlaytestRepository() domain.PlaytestRepository {
+	if c.playtestRepository == nil {
+		c.playtestRepository = &persistence.PlaytestRepository{
+			DB: c.DB(),
+		}
+	}
+
+	return c.playtestRepository
+}
+
 // UserRepository implementation for database
 func (c *Container) UserRepository() domain.UserRepository {
 	if c.userRepository == nil {
@@ -213,6 +242,7 @@ func (c *Container) DB() *gorm.DB {
 			&domain.User{},
 			&game.RulesSection{},
 			&domain.Event{},
+			&domain.Playtest{},
 		)
 
 		c.db = db
@@ -306,7 +336,7 @@ func (c *Container) Session() sessions.Store {
 		c.session.Options(sessions.Options{
 			Path:     "/",
 			Domain:   "",
-			MaxAge:   60 * 60, // 1 Hour
+			MaxAge:   60 * 60 * 6, // 6 Hours
 			Secure:   secure,
 			HttpOnly: true,
 		})
@@ -383,6 +413,17 @@ func (c *Container) GameController() *controller.GameController {
 	}
 
 	return c.gameController
+}
+
+// PlaytestController for handling /playtests routes
+func (c *Container) PlaytestController() *controller.PlaytestController {
+	if c.playtestController == nil {
+		c.playtestController = &controller.PlaytestController{
+			PlaytestService: c.PlaytestService(),
+		}
+	}
+
+	return c.playtestController
 }
 
 // UserController for handling /users routes

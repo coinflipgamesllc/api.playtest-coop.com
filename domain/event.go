@@ -26,7 +26,7 @@ type Event struct {
 	RRule    string        `json:"rrule"`
 }
 
-// EventRepository defines how to interact with games in database
+// EventRepository defines how to interact with events in database
 type EventRepository interface {
 	ListEvents() ([]Event, error)
 	EventOfID(id uint) (*Event, error)
