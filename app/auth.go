@@ -8,9 +8,10 @@ import (
 type (
 	// AuthService handles both authentication and authorization
 	AuthService struct {
-		AuthToken      string
-		Logger         *zap.Logger
-		UserRepository domain.UserRepository
+		AuthToken              string
+		Logger                 *zap.Logger
+		LoginAttemptRepository domain.LoginAttemptRepository
+		UserRepository         domain.UserRepository
 	}
 
 	// Request DTOs
@@ -154,7 +155,7 @@ func (s *AuthService) ResetPassword(otp string) error {
 }
 
 // Signup will create a new account
-func (s *AuthService) Signup(name, email, password string) (*domain.User, error) {
+func (s *AuthService) Signup(name, email, password, ip string) (*domain.User, error) {
 	user, err := domain.NewUser(name, email, password)
 	if err != nil {
 		s.Logger.Error(err.Error())
@@ -168,6 +169,8 @@ func (s *AuthService) Signup(name, email, password string) (*domain.User, error)
 		return nil, domain.GenericServerError{}
 	}
 
+	s.LoginAttemptRepository.Save(domain.RecordLoginAttempt(email, ip, true))
+
 	// Decorate the email for this response
 	user.Email = user.Account.Email
 
@@ -175,7 +178,7 @@ func (s *AuthService) Signup(name, email, password string) (*domain.User, error)
 }
 
 // Login attempts to log a user into their account
-func (s *AuthService) Login(email, password string) (*domain.User, error) {
+func (s *AuthService) Login(email, password, ip string) (*domain.User, error) {
 	// Retrieve user
 	user, err := s.UserRepository.UserOfEmail(email)
 	if err != nil {
@@ -189,6 +192,9 @@ func (s *AuthService) Login(email, password string) (*domain.User, error) {
 
 	// Verify password
 	ok, err := user.ValidPassword(password)
+
+	s.LoginAttemptRepository.Save(domain.RecordLoginAttempt(email, ip, err == nil && ok))
+
 	if err != nil {
 		s.Logger.Error(err.Error())
 		return nil, domain.GenericServerError{}

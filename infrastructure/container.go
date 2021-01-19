@@ -39,11 +39,12 @@ type Container struct {
 	userService     *app.UserService
 
 	// Domain
-	eventRepository    domain.EventRepository
-	fileRepository     domain.FileRepository
-	gameRepository     domain.GameRepository
-	playtestRepository domain.PlaytestRepository
-	userRepository     domain.UserRepository
+	eventRepository        domain.EventRepository
+	fileRepository         domain.FileRepository
+	gameRepository         domain.GameRepository
+	loginAttemptRepository domain.LoginAttemptRepository
+	playtestRepository     domain.PlaytestRepository
+	userRepository         domain.UserRepository
 
 	// Infrastructure
 	db        *gorm.DB
@@ -71,9 +72,10 @@ type Container struct {
 func (c *Container) AuthService() *app.AuthService {
 	if c.authService == nil {
 		c.authService = &app.AuthService{
-			AuthToken:      os.Getenv("AUTH_TOKEN"),
-			Logger:         c.Logger(),
-			UserRepository: c.UserRepository(),
+			AuthToken:              os.Getenv("AUTH_TOKEN"),
+			Logger:                 c.Logger(),
+			LoginAttemptRepository: c.LoginAttemptRepository(),
+			UserRepository:         c.UserRepository(),
 		}
 	}
 
@@ -196,6 +198,17 @@ func (c *Container) GameRepository() domain.GameRepository {
 	return c.gameRepository
 }
 
+// LoginAttemptRepository implementation for database
+func (c *Container) LoginAttemptRepository() domain.LoginAttemptRepository {
+	if c.loginAttemptRepository == nil {
+		c.loginAttemptRepository = &persistence.LoginAttemptRepository{
+			DB: c.DB(),
+		}
+	}
+
+	return c.loginAttemptRepository
+}
+
 // PlaytestRepository implementation for database
 func (c *Container) PlaytestRepository() domain.PlaytestRepository {
 	if c.playtestRepository == nil {
@@ -243,6 +256,7 @@ func (c *Container) DB() *gorm.DB {
 			&game.RulesSection{},
 			&domain.Event{},
 			&domain.Playtest{},
+			&domain.LoginAttempt{},
 		)
 
 		c.db = db

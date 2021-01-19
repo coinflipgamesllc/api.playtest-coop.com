@@ -121,7 +121,7 @@ func (t *AuthController) Signup(c *gin.Context) {
 		return
 	}
 
-	user, err := t.AuthService.Signup(req.Name, req.Email, req.Password)
+	user, err := t.AuthService.Signup(req.Name, req.Email, req.Password, c.ClientIP())
 	if err != nil {
 		requestErrorResponse(c, "failed to create account")
 		return
@@ -154,7 +154,7 @@ func (t *AuthController) Login(c *gin.Context) {
 	}
 
 	// Attempt to log in
-	user, err := t.AuthService.Login(req.Email, req.Password)
+	user, err := t.AuthService.Login(req.Email, req.Password, c.ClientIP())
 	if err != nil {
 		if errors.Is(err, domain.UserNotFound{}) {
 			notFoundResponse(c, err.Error())
