@@ -50,7 +50,7 @@ func (r *EventRepository) Save(event *domain.Event) error {
 
 			result = db.Omit(clause.Associations).Save(event)
 		} else {
-			result = db.Omit(clause.Associations).Create(event)
+			result = db.Omit("Facilitators.*").Create(event)
 		}
 
 		return result.Error
