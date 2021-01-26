@@ -111,7 +111,8 @@ func (s *AuthService) RequestResetPassword(email string) error {
 	}
 
 	if user == nil {
-		return domain.UserNotFound{ProvidedEmail: email}
+		// Don't reveal that the user doesn't exist
+		return nil
 	}
 
 	// Request reset password & save
@@ -187,7 +188,8 @@ func (s *AuthService) Login(email, password, ip string) (*domain.User, error) {
 	}
 
 	if user == nil {
-		return nil, domain.UserNotFound{ProvidedEmail: email}
+		// Don't reveal user doesn't exist
+		return nil, domain.CredentialsIncorrect{}
 	}
 
 	// Verify password
