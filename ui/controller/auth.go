@@ -19,11 +19,17 @@ type AuthController struct {
 // @Description The authentication token includes the user's ID as the subject. We extract that and use it to pull the user from the database.
 // @Produce json
 // @Success 200 {object} app.UserResponse
-// @Failure 401 {object} UnauthorizedResponse
 // @Failure 500 {object} ServerErrorResponse
 // @Tags auth
 // @Router /auth/user [get]
 func (t *AuthController) GetUser(c *gin.Context) {
+	session := sessions.Default(c)
+	id := session.Get("user_id")
+	if id == nil {
+		c.JSON(200, nil)
+		return
+	}
+
 	userID := userID(c)
 
 	// Fetch the user
@@ -34,7 +40,7 @@ func (t *AuthController) GetUser(c *gin.Context) {
 	}
 
 	if user == nil {
-		unauthorizedResponse(c)
+		c.JSON(200, nil)
 		return
 	}
 

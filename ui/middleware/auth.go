@@ -12,7 +12,7 @@ func Authenticated(authToken string) gin.HandlerFunc {
 		session := sessions.Default(c)
 		userID := session.Get("user_id")
 
-		if userID == nil {
+		if userID == nil && c.FullPath() != "/v1/auth/user" {
 			c.AbortWithStatusJSON(401, gin.H{"error": domain.Unauthorized{}.Error()})
 			return
 		}
