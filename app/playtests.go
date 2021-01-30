@@ -31,8 +31,8 @@ type (
 		GameID              uint   `json:"game" binding:"required"`
 		EventID             uint   `json:"event"`
 		Date                string `json:"date" binding:"required"`
-		MinNumberOfPlayers  uint   `json:"min_num_players" binding:"required" example:"3"`
-		MaxNumberOfPlayers  uint   `json:"max_num_players" binding:"required" example:"5"`
+		MinNumberOfPlayers  uint   `json:"min_players" binding:"required" example:"3"`
+		MaxNumberOfPlayers  uint   `json:"max_players" binding:"required" example:"5"`
 		Duration            uint   `json:"duration" binding:"required" example:"60"`
 		DesignerWantsToPlay bool   `json:"designer_wants_to_play" binding:"required" example:"true"`
 		HopingToTest        string `json:"hoping_to_test" binding:"required" example:"Is the kerpluxic mechanic intuitive?"`
